@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { GameState } from '@/types/game';
 import VotePlayerCard from '@/components/ui/VotePlayerCard';
+import { playVoteCast } from '@/lib/audioManager';
 
 interface VotingScreenProps {
   gameState: GameState & {
@@ -9,12 +10,13 @@ interface VotingScreenProps {
 }
 
 export default function VotingScreen({ gameState }: VotingScreenProps) {
-  const { players, myId, myVote, voteProgress, timer, actions } = gameState;
+  const { phase, players, myId, myVote, voteProgress, voteBreakdown, timer, actions } = gameState;
 
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
 
   const me = players.find(p => p.id === myId);
   const hasVoted = Boolean(me?.hasVoted || myVote);
+  const isProceeding = phase === 'proceeding';
 
   const totalAlive = players.filter(p => p.isAlive).length;
   const votedCount = voteProgress
@@ -22,7 +24,8 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
     : players.filter(p => p.isAlive && p.hasVoted).length;
 
   const handleConfirmVote = () => {
-    if (selectedTargetId && !hasVoted) {
+    if (selectedTargetId && !hasVoted && !isProceeding) {
+      playVoteCast();
       actions.submitVote(selectedTargetId);
       setSelectedTargetId(null);
     }
@@ -39,16 +42,16 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
         <div className="flex items-center justify-between border-b-2 border-zinc-800 pb-3">
           <div className="flex items-center gap-2 text-zinc-400 font-mono text-xs">
             <span>📶 5G</span>
-            <span>• EMERGENCY</span>
+            <span>• {isProceeding ? 'PROCEEDING' : 'EMERGENCY'}</span>
           </div>
 
           <h1 className="text-xl sm:text-3xl font-black tracking-wider text-white uppercase text-center font-sans">
-            Who Is The Impostor?
+            {isProceeding ? 'PROCEEDING...' : 'Who Is The Impostor?'}
           </h1>
 
           <div className="flex items-center gap-2 text-zinc-400 font-mono text-xs">
             <span className="bg-zinc-800 px-2 py-0.5 rounded font-bold text-accent">
-              {votedCount}/{totalAlive} VOTED
+              {isProceeding ? 'TALLY COMPLETE' : `${votedCount}/${totalAlive} VOTED`}
             </span>
           </div>
         </div>
@@ -60,6 +63,10 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
             const isVotedByMe = myVote === p.id;
             const isSelected = selectedTargetId === p.id;
 
+            // Extract voters for this player during proceeding phase
+            const targetBreakdown = voteBreakdown?.find(b => b.targetId === p.id);
+            const voters = targetBreakdown?.voters || [];
+
             return (
               <VotePlayerCard
                 key={p.id}
@@ -68,8 +75,10 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
                 hasVoted={hasVoted}
                 isVotedByMe={isVotedByMe}
                 isSelected={isSelected}
+                isProceeding={isProceeding}
+                voters={voters}
                 onSelect={id => {
-                  if (!hasVoted) {
+                  if (!hasVoted && !isProceeding) {
                     setSelectedTargetId(id === selectedTargetId ? null : id);
                   }
                 }}
@@ -79,7 +88,7 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
         </div>
 
         {/* Vote Confirmation Bar / Selected Target Bar */}
-        {selectedPlayer && !hasVoted && (
+        {selectedPlayer && !hasVoted && !isProceeding && (
           <div className="bg-zinc-800 border-2 border-yellow-400 rounded-xl p-3 flex items-center justify-between animate-fadeIn">
             <div className="text-sm">
               <span className="text-zinc-400 block text-xs uppercase font-mono">Confirm Vote For:</span>
@@ -108,7 +117,11 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
         {/* Bottom Bar: Status Message & Among Us Style Timer */}
         <div className="flex items-center justify-between border-t-2 border-zinc-800 pt-3">
           <div className="text-xs font-mono">
-            {hasVoted ? (
+            {isProceeding ? (
+              <span className="text-yellow-400 font-bold animate-pulse">
+                Revealing votes... Ejection in 5s!
+              </span>
+            ) : hasVoted ? (
               <span className="text-green-400 font-bold flex items-center gap-1">
                 ✓ Vote submitted. Waiting for others...
               </span>
@@ -120,7 +133,8 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
           </div>
 
           <div className="font-mono text-sm font-black text-zinc-300 bg-zinc-800 px-3 py-1 rounded border border-zinc-700">
-            Voting Ends In: <span className="text-accent">{timer !== null ? `${timer}s` : '∞'}</span>
+            {isProceeding ? 'Ejection In:' : 'Voting Ends In:'}{' '}
+            <span className="text-accent">{timer !== null ? `${timer}s` : '5s'}</span>
           </div>
         </div>
 

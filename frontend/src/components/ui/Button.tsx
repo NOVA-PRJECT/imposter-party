@@ -1,4 +1,5 @@
 import React from 'react';
+import { playButtonClick } from '@/lib/audioManager';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'accent' | 'primary' | 'secondary' | 'danger' | 'ghost';
@@ -11,6 +12,7 @@ export default function Button({
   fullWidth = false,
   className = '',
   disabled,
+  onClick,
   ...props
 }: ButtonProps) {
   let baseStyles = 'inline-flex items-center justify-center font-bold tracking-wide transition-all rounded-card min-touch px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
@@ -25,10 +27,18 @@ export default function Button({
 
   const widthStyle = fullWidth ? 'w-full' : '';
 
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    playButtonClick();
+    if (onClick) {
+      onClick(e);
+    }
+  };
+
   return (
     <button
       className={`${baseStyles} ${variants[variant]} ${widthStyle} ${className}`}
       disabled={disabled}
+      onClick={handleClick}
       {...props}
     >
       {children}

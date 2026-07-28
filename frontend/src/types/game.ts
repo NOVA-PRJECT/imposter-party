@@ -3,6 +3,7 @@ export type GamePhase =
   | 'role-reveal'
   | 'discussion'
   | 'voting'
+  | 'proceeding'
   | 'vote-result'
   | 'game-over';
 
@@ -68,6 +69,15 @@ export interface WordCategory {
   words: WordEntry[];
 }
 
+export interface VoteTargetBreakdown {
+  targetId: string;
+  voters: {
+    id: string;
+    name: string;
+    color: ColorId;
+  }[];
+}
+
 export interface VoteResult {
   eliminated: {
     id: string;
@@ -97,6 +107,7 @@ export interface GameState {
   myVote: string | null;
   voteProgress: { votedCount: number; totalAlive: number } | null;
   voteResult: VoteResult | null;
+  voteBreakdown: VoteTargetBreakdown[];
   timer: number | null;
   categories: { id: string; label: string }[];
   customWordCount: number;

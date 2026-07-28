@@ -20,6 +20,7 @@ const initialState: GameState = {
   myVote: null,
   voteProgress: null,
   voteResult: null,
+  voteBreakdown: [],
   timer: null,
   categories: [],
   customWordCount: 0,
@@ -101,13 +102,14 @@ export function useGame(initialRoomCode: string = '') {
       setState(s => ({ ...s, myRole: role }));
     });
 
-    socket.on('game:phaseChanged', ({ phase, players, round, timerSeconds, serverTimestamp }) => {
+    socket.on('game:phaseChanged', ({ phase, players, round, timerSeconds, serverTimestamp, voteBreakdown }) => {
       setState(s => ({
         ...s,
         phase,
         players: players ?? s.players,
-        myVote: null,
+        myVote: phase === 'discussion' ? null : s.myVote,
         voteResult: null,
+        voteBreakdown: voteBreakdown ?? s.voteBreakdown,
         error: null,
       }));
 
@@ -193,7 +195,6 @@ export function useGame(initialRoomCode: string = '') {
       socket.emit('room:join', { code, playerName });
     },
     startGame: () => socket.emit('game:start'),
-    discussionReady: () => socket.emit('game:discussionReady'),
     callVote: () => socket.emit('game:callVote'),
     submitVote: (id: string) => {
       setState(s => ({ ...s, myVote: id }));

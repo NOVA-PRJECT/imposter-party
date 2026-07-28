@@ -38,12 +38,14 @@ function startGame(room, io) {
   });
 
   room.round = 1;
-  room.phase = 'role-reveal';
+
+  // Direct transition to Discussion phase
+  room.phase = 'discussion';
 
   emitRoles(room, io);
 
   io.to(room.code).emit('game:phaseChanged', {
-    phase: 'role-reveal',
+    phase: 'discussion',
     round: room.round,
     players: safePlayerList(room),
   });
@@ -93,12 +95,14 @@ function nextRound(room, io) {
   });
 
   room.round += 1;
-  room.phase = 'role-reveal';
+
+  // Direct transition to Discussion phase
+  room.phase = 'discussion';
 
   emitRoles(room, io);
 
   io.to(room.code).emit('game:phaseChanged', {
-    phase: 'role-reveal',
+    phase: 'discussion',
     round: room.round,
     players: safePlayerList(room),
   });
@@ -133,6 +137,35 @@ function tallyVotes(roomCode, io) {
     clearTimeout(room.votingTimerRef);
     room.votingTimerRef = null;
   }
+
+  // Build vote breakdown detailing voters for each player
+  const voteBreakdown = room.players.map(target => {
+    const voters = room.players
+      .filter(voter => voter.vote === target.id)
+      .map(voter => ({ id: voter.id, name: voter.name, color: voter.color }));
+    return { targetId: target.id, voters };
+  });
+
+  room.phase = 'proceeding';
+
+  // Broadcast 5-second PROCEEDING phase with voter breakdown
+  io.to(roomCode).emit('game:phaseChanged', {
+    phase: 'proceeding',
+    timerSeconds: 5,
+    serverTimestamp: Date.now(),
+    players: safePlayerList(room),
+    voteBreakdown,
+  });
+
+  // After 5 seconds, finalize ejection & vote result
+  setTimeout(() => {
+    finalizeVoteResult(roomCode, io);
+  }, 5000);
+}
+
+function finalizeVoteResult(roomCode, io) {
+  const room = rooms.get(roomCode);
+  if (!room || room.phase !== 'proceeding') return;
 
   const alivePlayers = room.players.filter(p => p.isAlive);
   const maxVotes = Math.max(...alivePlayers.map(p => p.voteCount));

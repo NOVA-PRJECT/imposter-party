@@ -24,6 +24,7 @@ export default function PhaseGate({ gameState }: PhaseGateProps) {
     case 'discussion':
       return <DiscussionScreen gameState={gameState} />;
     case 'voting':
+    case 'proceeding':
       return <VotingScreen gameState={gameState} />;
     case 'vote-result':
       return <VoteResultScreen gameState={gameState} />;

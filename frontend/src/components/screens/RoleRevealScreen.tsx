@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GameState } from '@/types/game';
 import ColorCircle from '@/components/ui/ColorCircle';
 import Button from '@/components/ui/Button';
+import { playRoleReveal } from '@/lib/audioManager';
 
 interface RoleRevealScreenProps {
   gameState: GameState & {
@@ -13,6 +14,11 @@ export default function RoleRevealScreen({ gameState }: RoleRevealScreenProps) {
   const { myRole, isHost, actions } = gameState;
 
   const isImposter = myRole?.isImposter ?? false;
+
+  useEffect(() => {
+    // Play identical sci-fi reveal sound for BOTH crewmate & imposter
+    playRoleReveal();
+  }, []);
 
   return (
     <div

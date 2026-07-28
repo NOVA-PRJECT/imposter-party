@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GameState } from '@/types/game';
 import ColorCircle from '@/components/ui/ColorCircle';
 import Button from '@/components/ui/Button';
+import { playVictory } from '@/lib/audioManager';
 
 interface GameOverScreenProps {
   gameState: GameState & {
@@ -17,6 +18,10 @@ export default function GameOverScreen({ gameState }: GameOverScreenProps) {
   const word = voteResult?.word;
 
   const isCrewmateWin = winCondition === 'crewmates';
+
+  useEffect(() => {
+    playVictory();
+  }, []);
 
   return (
     <div
