@@ -37,6 +37,11 @@ export default function LobbyScreen({ gameState }: LobbyScreenProps) {
   const maxImpostersAllowed = Math.max(1, Math.ceil(players.length / 5));
   const canStart = players.length >= 3 && settings.imposterCount <= maxImpostersAllowed;
 
+  const activeCategoryLabel =
+    settings.wordCategory === 'custom_only'
+      ? 'Custom Words Only'
+      : categories.find(c => c.id === settings.wordCategory)?.label || 'General';
+
   const handleAddCustomWord = (e: React.FormEvent) => {
     e.preventDefault();
     setCustomHintError('');
@@ -90,7 +95,7 @@ export default function LobbyScreen({ gameState }: LobbyScreenProps) {
         </div>
       </div>
 
-      {/* Host Settings Section */}
+      {/* Host Controls OR Read-Only Non-Host Display */}
       {isHost ? (
         <div className="bg-surface border border-border rounded-card p-4 space-y-4">
           <h3 className="font-mono text-xs uppercase tracking-wider text-muted border-b border-border pb-2">
@@ -134,8 +139,45 @@ export default function LobbyScreen({ gameState }: LobbyScreenProps) {
             </div>
           </div>
 
+          {/* Max Players Stepper */}
+          <div className="flex items-center justify-between pt-2 border-t border-border/40">
+            <div>
+              <span className="text-sm font-semibold text-primary block">Max Players Limit</span>
+              <span className="text-xs text-muted">Room capacity</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() =>
+                  actions.updateSettings({
+                    maxPlayers: Math.max(players.length, settings.maxPlayers - 1),
+                  })
+                }
+                disabled={settings.maxPlayers <= Math.max(3, players.length)}
+                className="w-8 h-8 rounded-card bg-surface2 text-primary font-bold disabled:opacity-30 border border-border"
+              >
+                -
+              </button>
+              <span className="font-mono text-lg font-bold text-accent">
+                {settings.maxPlayers}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  actions.updateSettings({
+                    maxPlayers: Math.min(20, settings.maxPlayers + 1),
+                  })
+                }
+                disabled={settings.maxPlayers >= 20}
+                className="w-8 h-8 rounded-card bg-surface2 text-primary font-bold disabled:opacity-30 border border-border"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
           {/* Category Select */}
-          <div className="space-y-1">
+          <div className="space-y-1 pt-2 border-t border-border/40">
             <label className="text-sm font-semibold text-primary block">Word Category</label>
             <select
               value={settings.wordCategory}
@@ -266,12 +308,62 @@ export default function LobbyScreen({ gameState }: LobbyScreenProps) {
           </Button>
         </div>
       ) : (
-        <div className="bg-surface border border-border rounded-card p-6 text-center space-y-3">
-          <div className="inline-block animate-spin text-2xl">⏳</div>
-          <h3 className="text-lg font-bold text-primary">Waiting for Host</h3>
-          <p className="text-xs text-muted">
-            The host is setting up the game...
-          </p>
+        <div className="bg-surface border border-border rounded-card p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-border pb-2">
+            <h3 className="font-mono text-xs uppercase tracking-wider text-muted">
+              Game Settings (Read Only)
+            </h3>
+            <span className="text-xs text-accent font-mono animate-pulse">
+              Controlled by Host 👑
+            </span>
+          </div>
+
+          <div className="space-y-2.5 text-sm">
+            <div className="flex items-center justify-between p-2.5 rounded-card bg-surface2 border border-border">
+              <span className="text-muted font-medium">Category</span>
+              <span className="font-bold text-accent">{activeCategoryLabel}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-2.5 rounded-card bg-surface2 border border-border">
+              <span className="text-muted font-medium">Imposters</span>
+              <span className="font-mono font-bold text-primary">{settings.imposterCount}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-2.5 rounded-card bg-surface2 border border-border">
+              <span className="text-muted font-medium">Voting Timer</span>
+              <span className="font-mono font-bold text-primary">
+                {settings.votingTimerSeconds > 0 ? `${settings.votingTimerSeconds}s` : 'No Timer'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2.5 rounded-card bg-surface2 border border-border text-center">
+                <span className="text-xs text-muted block">Hint Mode</span>
+                <span className={`font-bold text-xs ${settings.hintMode ? 'text-success' : 'text-muted'}`}>
+                  {settings.hintMode ? 'ENABLED 💡' : 'OFF'}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-card bg-surface2 border border-border text-center">
+                <span className="text-xs text-muted block">Meaning Mode</span>
+                <span className={`font-bold text-xs ${settings.meaningMode ? 'text-success' : 'text-muted'}`}>
+                  {settings.meaningMode ? 'ENABLED 📖' : 'OFF'}
+                </span>
+              </div>
+            </div>
+
+            {customWordCount > 0 && (
+              <div className="flex items-center justify-between p-2 rounded-card bg-surface2 border border-border text-xs">
+                <span className="text-muted">Custom Words Added</span>
+                <span className="font-mono font-bold text-accent">{customWordCount}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="text-center pt-2">
+            <p className="text-xs text-muted font-mono animate-pulse">
+              Waiting for host to start the game...
+            </p>
+          </div>
         </div>
       )}
 

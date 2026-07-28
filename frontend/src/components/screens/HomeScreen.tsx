@@ -9,6 +9,7 @@ export default function HomeScreen({ gameState }: HomeScreenProps) {
   const [tab, setTab] = useState<'create' | 'join'>('create');
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
+  const [maxPlayers, setMaxPlayers] = useState(10);
 
   const actions = gameState?.actions;
   const error = gameState?.error;
@@ -17,7 +18,7 @@ export default function HomeScreen({ gameState }: HomeScreenProps) {
     e.preventDefault();
     if (!playerName.trim()) return;
     if (actions?.createRoom) {
-      actions.createRoom(playerName.trim());
+      actions.createRoom(playerName.trim(), maxPlayers);
     }
   };
 
@@ -98,6 +99,42 @@ export default function HomeScreen({ gameState }: HomeScreenProps) {
                 className="w-full px-4 py-3 bg-surface2 border border-border rounded-card text-primary placeholder-muted focus:outline-none focus:border-accent text-base"
               />
             </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-mono uppercase text-muted">
+                  Max Players Limit
+                </label>
+                <span className="text-xs text-accent font-mono font-bold">{maxPlayers} players</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMaxPlayers(m => Math.max(3, m - 1))}
+                  disabled={maxPlayers <= 3}
+                  className="w-10 h-10 rounded-card bg-surface2 text-primary font-bold border border-border disabled:opacity-30 flex items-center justify-center text-lg"
+                >
+                  -
+                </button>
+                <input
+                  type="range"
+                  min={3}
+                  max={20}
+                  value={maxPlayers}
+                  onChange={e => setMaxPlayers(parseInt(e.target.value) || 10)}
+                  className="w-full accent-accent bg-surface2 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMaxPlayers(m => Math.min(20, m + 1))}
+                  disabled={maxPlayers >= 20}
+                  className="w-10 h-10 rounded-card bg-surface2 text-primary font-bold border border-border disabled:opacity-30 flex items-center justify-center text-lg"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
             <Button type="submit" variant="accent" fullWidth disabled={!playerName.trim()}>
               Create Room
             </Button>

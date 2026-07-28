@@ -14,15 +14,52 @@ const {
 } = require('../serverModules/gameManager');
 const { getCategories } = require('../serverModules/utils/wordLoader');
 const { getMaxImposters } = require('../serverModules/utils/imposterRules');
+const { sanitizeString } = require('../serverModules/utils/sanitizer');
+
+// Socket event rate limiter map (Socket ID -> timestamps array)
+const socketRateLimits = new Map();
+
+function isRateLimited(socketId) {
+  const now = Date.now();
+  const timestamps = socketRateLimits.get(socketId) || [];
+  // Filter timestamps within last 3 seconds
+  const recent = timestamps.filter(t => now - t < 3000);
+  
+  if (recent.length >= 10) {
+    return true; // Exceeded 10 requests per 3 seconds
+  }
+  
+  recent.push(now);
+  socketRateLimits.set(socketId, recent);
+  return false;
+}
 
 function initSocketServer(io) {
   io.on('connection', (socket) => {
+    // Middleware-like check for rate limiting
+    socket.use(([event, ...args], next) => {
+      if (isRateLimited(socket.id)) {
+        return next(new Error('Rate limit exceeded. Please slow down.'));
+      }
+      next();
+    });
+
     // room:create
-    socket.on('room:create', ({ playerName }) => {
+    socket.on('room:create', ({ playerName, maxPlayers }) => {
       try {
-        const { code, player, room } = createRoom(socket.id, playerName);
+        const cleanName = sanitizeString(playerName, 16) || 'Player 1';
+        const { code, player, room } = createRoom(socket.id, cleanName, maxPlayers);
         socket.join(code);
-        socket.emit('room:created', { code, player });
+
+        const safeRoomView = {
+          code: room.code,
+          players: safePlayerList(room),
+          settings: room.settings,
+          categories: getCategories(),
+        };
+
+        // Emit room:created with complete room details & categories
+        socket.emit('room:created', { code, player, room: safeRoomView });
       } catch (err) {
         socket.emit('error', { message: err.message });
       }
@@ -31,7 +68,10 @@ function initSocketServer(io) {
     // room:join
     socket.on('room:join', ({ code, playerName }) => {
       try {
-        const { room, newPlayer } = joinRoom(code, socket.id, playerName);
+        const cleanCode = sanitizeString(code, 6).toUpperCase();
+        const cleanName = sanitizeString(playerName, 16) || 'Player';
+
+        const { room, newPlayer } = joinRoom(cleanCode, socket.id, cleanName);
         socket.join(room.code);
 
         const safeRoomView = {
@@ -74,6 +114,14 @@ function initSocketServer(io) {
           }
         }
 
+        if (settings.maxPlayers !== undefined) {
+          const newMax = Math.max(3, Math.min(20, parseInt(settings.maxPlayers, 10) || 10));
+          if (newMax < room.players.length) {
+            throw new Error(`Cannot set max players lower than current player count (${room.players.length})`);
+          }
+          settings.maxPlayers = newMax;
+        }
+
         room.settings = { ...room.settings, ...settings };
         io.to(room.code).emit('room:settingsUpdated', { settings: room.settings });
       } catch (err) {
@@ -90,18 +138,26 @@ function initSocketServer(io) {
           throw new Error('Only the host can add custom words');
         }
 
-        const trimmedHint = (hint || '').trim();
-        if (trimmedHint.includes(' ') || !trimmedHint) {
+        const cleanWord = sanitizeString(word, 40);
+        const cleanMeaning = sanitizeString(meaning, 100);
+        const cleanHint = sanitizeString(hint, 20);
+
+        if (!cleanHint || cleanHint.includes(' ')) {
           throw new Error('Hint must be strictly one word with no spaces');
         }
 
+        if (!cleanWord) {
+          throw new Error('Word cannot be empty');
+        }
+
         room.customWords.push({
-          word: (word || '').trim(),
-          meaning: (meaning || '').trim(),
-          hint: trimmedHint,
+          word: cleanWord,
+          meaning: cleanMeaning,
+          hint: cleanHint,
         });
 
         socket.emit('room:customWordAdded', { count: room.customWords.length });
+        io.to(room.code).emit('room:customWordsUpdated', { count: room.customWords.length });
       } catch (err) {
         socket.emit('error', { message: err.message });
       }
@@ -228,6 +284,7 @@ function initSocketServer(io) {
 
     // disconnect
     socket.on('disconnect', () => {
+      socketRateLimits.delete(socket.id);
       handlePlayerLeave(socket, io, true);
     });
   });

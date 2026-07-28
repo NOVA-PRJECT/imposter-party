@@ -3,6 +3,17 @@ const { getNextAvailableColor, isColorAvailable } = require('./utils/colorManage
 
 const rooms = new Map();
 
+// Stale room reaper interval (runs every 10 minutes, cleans rooms inactive for > 2 hours)
+setInterval(() => {
+  const now = Date.now();
+  const TWO_HOURS = 2 * 60 * 60 * 1000;
+  for (const [code, room] of rooms.entries()) {
+    if (now - (room.lastActive || now) > TWO_HOURS || room.players.length === 0) {
+      deleteRoom(code);
+    }
+  }
+}, 10 * 60 * 1000);
+
 function safePlayerList(room) {
   return room.players.map(({ id, name, color, isHost, isAlive, hasVoted, voteCount, disconnected }) => ({
     id,
@@ -16,9 +27,11 @@ function safePlayerList(room) {
   }));
 }
 
-function createRoom(hostSocketId, playerName) {
+function createRoom(hostSocketId, playerName, requestedMaxPlayers = 10) {
   const existingCodes = new Set(rooms.keys());
   const code = generateRoomCode(existingCodes);
+
+  const maxPlayers = Math.max(3, Math.min(20, parseInt(requestedMaxPlayers, 10) || 10));
 
   const initialPlayer = {
     id: hostSocketId,
@@ -40,7 +53,7 @@ function createRoom(hostSocketId, playerName) {
     phase: 'lobby',
     players: [initialPlayer],
     settings: {
-      maxPlayers: 20,
+      maxPlayers,
       imposterCount: 1,
       votingTimerSeconds: 60,
       wordCategory: 'general',
@@ -53,6 +66,7 @@ function createRoom(hostSocketId, playerName) {
     currentHint: null,
     round: 0,
     votingTimerRef: null,
+    lastActive: Date.now(),
   };
 
   rooms.set(code, room);
@@ -65,12 +79,14 @@ function joinRoom(code, socketId, playerName) {
     throw new Error('Room not found');
   }
 
+  room.lastActive = Date.now();
+
   if (room.phase !== 'lobby') {
     throw new Error('Game already in progress');
   }
 
   if (room.players.length >= room.settings.maxPlayers) {
-    throw new Error('Room is full');
+    throw new Error(`Room is full (Max ${room.settings.maxPlayers} players)`);
   }
 
   const usedColors = room.players.map(p => p.color);
@@ -98,6 +114,8 @@ function changePlayerColor(socketId, colorId) {
   const room = findRoomBySocketId(socketId);
   if (!room) throw new Error('Player not in room');
   if (room.phase !== 'lobby') throw new Error('Cannot change color during game');
+
+  room.lastActive = Date.now();
 
   const otherUsedColors = room.players
     .filter(p => p.id !== socketId)

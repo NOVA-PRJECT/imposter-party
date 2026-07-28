@@ -9,7 +9,7 @@ const initialState: GameState = {
   myId: '',
   myRole: null,
   settings: {
-    maxPlayers: 20,
+    maxPlayers: 10,
     imposterCount: 1,
     votingTimerSeconds: 60,
     wordCategory: 'general',
@@ -45,8 +45,17 @@ export function useGame(initialRoomCode: string = '') {
       setState(s => ({ ...s, myId: socket.id ?? '' }));
     });
 
-    socket.on('room:created', ({ code, player }) => {
-      setState(s => ({ ...s, roomCode: code, myId: player.id, isHost: true, error: null }));
+    socket.on('room:created', ({ code, player, room }) => {
+      setState(s => ({
+        ...s,
+        roomCode: code,
+        myId: player.id,
+        isHost: true,
+        players: room?.players ?? [player],
+        settings: room?.settings ?? s.settings,
+        categories: room?.categories ?? s.categories,
+        error: null,
+      }));
     });
 
     socket.on('room:joined', ({ room }) => {
@@ -77,6 +86,10 @@ export function useGame(initialRoomCode: string = '') {
     });
 
     socket.on('room:customWordAdded', ({ count }) => {
+      setState(s => ({ ...s, customWordCount: count }));
+    });
+
+    socket.on('room:customWordsUpdated', ({ count }) => {
       setState(s => ({ ...s, customWordCount: count }));
     });
 
@@ -156,6 +169,7 @@ export function useGame(initialRoomCode: string = '') {
       socket.off('room:updated');
       socket.off('room:settingsUpdated');
       socket.off('room:customWordAdded');
+      socket.off('room:customWordsUpdated');
       socket.off('room:hostMigrated');
       socket.off('game:roleAssigned');
       socket.off('game:phaseChanged');
@@ -170,9 +184,9 @@ export function useGame(initialRoomCode: string = '') {
   const socket = getSocket();
 
   const actions = {
-    createRoom: (playerName: string) => {
+    createRoom: (playerName: string, maxPlayers: number = 10) => {
       if (!socket.connected) socket.connect();
-      socket.emit('room:create', { playerName });
+      socket.emit('room:create', { playerName, maxPlayers });
     },
     joinRoom: (code: string, playerName: string) => {
       if (!socket.connected) socket.connect();
