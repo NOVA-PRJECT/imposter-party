@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background-color: #0A0A0A;
+    color: #F0F0F0;
+  }
+}
+
+@layer utilities {
+  .accent-glow {
+    text-shadow: 0 0 20px rgba(255, 77, 28, 0.5);
+  }
+  .card-glow {
+    box-shadow: 0 0 20px rgba(255, 77, 28, 0.15);
+  }
+  .min-touch {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
