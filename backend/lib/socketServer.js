@@ -22,11 +22,10 @@ const socketRateLimits = new Map();
 function isRateLimited(socketId) {
   const now = Date.now();
   const timestamps = socketRateLimits.get(socketId) || [];
-  // Filter timestamps within last 3 seconds
   const recent = timestamps.filter(t => now - t < 3000);
   
   if (recent.length >= 10) {
-    return true; // Exceeded 10 requests per 3 seconds
+    return true;
   }
   
   recent.push(now);
@@ -36,7 +35,6 @@ function isRateLimited(socketId) {
 
 function initSocketServer(io) {
   io.on('connection', (socket) => {
-    // Middleware-like check for rate limiting
     socket.use(([event, ...args], next) => {
       if (isRateLimited(socket.id)) {
         return next(new Error('Rate limit exceeded. Please slow down.'));
@@ -56,9 +54,9 @@ function initSocketServer(io) {
           players: safePlayerList(room),
           settings: room.settings,
           categories: getCategories(),
+          customWords: room.customWords || [],
         };
 
-        // Emit room:created with complete room details & categories
         socket.emit('room:created', { code, player, room: safeRoomView });
       } catch (err) {
         socket.emit('error', { message: err.message });
@@ -79,6 +77,7 @@ function initSocketServer(io) {
           players: safePlayerList(room),
           settings: room.settings,
           categories: getCategories(),
+          customWords: room.customWords || [],
         };
 
         socket.emit('room:joined', { room: safeRoomView, myColor: newPlayer.color });
@@ -150,14 +149,84 @@ function initSocketServer(io) {
           throw new Error('Word cannot be empty');
         }
 
-        room.customWords.push({
+        const newCustomWord = {
+          id: Date.now().toString(),
           word: cleanWord,
           meaning: cleanMeaning,
           hint: cleanHint,
-        });
+        };
 
-        socket.emit('room:customWordAdded', { count: room.customWords.length });
-        io.to(room.code).emit('room:customWordsUpdated', { count: room.customWords.length });
+        room.customWords.push(newCustomWord);
+
+        io.to(room.code).emit('room:customWordsUpdated', {
+          customWords: room.customWords,
+          count: room.customWords.length,
+        });
+      } catch (err) {
+        socket.emit('error', { message: err.message });
+      }
+    });
+
+    // room:editCustomWord
+    socket.on('room:editCustomWord', ({ index, word, meaning, hint }) => {
+      try {
+        const room = findRoomBySocketId(socket.id);
+        if (!room) return;
+        if (room.hostId !== socket.id) {
+          throw new Error('Only the host can edit custom words');
+        }
+
+        if (index < 0 || index >= room.customWords.length) {
+          throw new Error('Invalid custom word index');
+        }
+
+        const cleanWord = sanitizeString(word, 40);
+        const cleanMeaning = sanitizeString(meaning, 100);
+        const cleanHint = sanitizeString(hint, 20);
+
+        if (!cleanHint || cleanHint.includes(' ')) {
+          throw new Error('Hint must be strictly one word with no spaces');
+        }
+
+        if (!cleanWord) {
+          throw new Error('Word cannot be empty');
+        }
+
+        room.customWords[index] = {
+          ...room.customWords[index],
+          word: cleanWord,
+          meaning: cleanMeaning,
+          hint: cleanHint,
+        };
+
+        io.to(room.code).emit('room:customWordsUpdated', {
+          customWords: room.customWords,
+          count: room.customWords.length,
+        });
+      } catch (err) {
+        socket.emit('error', { message: err.message });
+      }
+    });
+
+    // room:deleteCustomWord
+    socket.on('room:deleteCustomWord', ({ index }) => {
+      try {
+        const room = findRoomBySocketId(socket.id);
+        if (!room) return;
+        if (room.hostId !== socket.id) {
+          throw new Error('Only the host can delete custom words');
+        }
+
+        if (index < 0 || index >= room.customWords.length) {
+          throw new Error('Invalid custom word index');
+        }
+
+        room.customWords.splice(index, 1);
+
+        io.to(room.code).emit('room:customWordsUpdated', {
+          customWords: room.customWords,
+          count: room.customWords.length,
+        });
       } catch (err) {
         socket.emit('error', { message: err.message });
       }
@@ -178,19 +247,6 @@ function initSocketServer(io) {
         }
 
         startGame(room, io);
-      } catch (err) {
-        socket.emit('error', { message: err.message });
-      }
-    });
-
-    // game:discussionReady
-    socket.on('game:discussionReady', () => {
-      try {
-        const room = findRoomBySocketId(socket.id);
-        if (!room || room.hostId !== socket.id || room.phase !== 'role-reveal') return;
-
-        room.phase = 'discussion';
-        io.to(room.code).emit('game:phaseChanged', { phase: 'discussion' });
       } catch (err) {
         socket.emit('error', { message: err.message });
       }

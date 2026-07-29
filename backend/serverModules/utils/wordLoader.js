@@ -21,49 +21,57 @@ function getCategories() {
 }
 
 /**
- * Returns a random word guaranteeing no adjacent rounds use words from the same department/category
+ * Returns a random word from the host's ticked categories guaranteeing no adjacent rounds use words from the same category
  */
-function getRandomWord(categoryId = 'general', customWords = [], roomState = {}) {
+function getRandomWord(categoryParam = 'general', customWords = [], roomState = {}) {
   const data = loadWords();
 
   const lastCategory = roomState?.lastCategory || null;
   const lastWord = roomState?.lastWord || null;
   const usedWords = roomState?.usedWords || new Set();
 
-  let selectedCategoryObj = null;
-  let wordPool = [];
+  let targetCategoryIds = [];
 
-  if (categoryId === 'custom_only') {
-    wordPool = customWords.map(w => ({ ...w, categoryId: 'custom_only' }));
-  } else if (categoryId !== 'general') {
-    selectedCategoryObj = data.categories.find(c => c.id === categoryId) || data.categories[0];
-    wordPool = selectedCategoryObj.words.map(w => ({ ...w, categoryId: selectedCategoryObj.id }));
-    if (customWords.length > 0) {
-      wordPool.push(...customWords.map(w => ({ ...w, categoryId: 'custom_only' })));
-    }
+  if (Array.isArray(categoryParam) && categoryParam.length > 0) {
+    targetCategoryIds = categoryParam.filter(id => id !== 'custom_only');
+  } else if (typeof categoryParam === 'string' && categoryParam !== 'general' && categoryParam !== 'custom_only') {
+    targetCategoryIds = [categoryParam];
   } else {
-    // GENERAL / MIX MODE: Pick a random category DIFFERENT from lastCategory
-    let candidateCategories = data.categories.filter(c => c.id !== 'general' && c.id !== lastCategory);
-    
-    // Fallback if filtering removed all candidate categories
-    if (candidateCategories.length === 0) {
-      candidateCategories = data.categories.filter(c => c.id !== 'general');
-    }
+    // All categories
+    targetCategoryIds = data.categories.map(c => c.id);
+  }
 
-    // Pick random category from candidates
-    const randCatIdx = Math.floor(Math.random() * candidateCategories.length);
-    selectedCategoryObj = candidateCategories[randCatIdx];
+  // Handle custom words only mode
+  if (categoryParam === 'custom_only' || (Array.isArray(categoryParam) && categoryParam.includes('custom_only') && targetCategoryIds.length === 0)) {
+    const pool = customWords.map(w => ({ ...w, categoryId: 'custom_only' }));
+    const filtered = pool.filter(w => w.word !== lastWord);
+    return (filtered.length > 0 ? filtered : pool)[Math.floor(Math.random() * pool.length)];
+  }
 
-    wordPool = selectedCategoryObj.words.map(w => ({ ...w, categoryId: selectedCategoryObj.id }));
-    if (customWords.length > 0) {
-      wordPool.push(...customWords.map(w => ({ ...w, categoryId: 'custom_only' })));
-    }
+  // Find candidate category objects from dataset matching host's ticked categories
+  let candidateCategories = data.categories.filter(c => targetCategoryIds.includes(c.id));
+  if (candidateCategories.length === 0) {
+    candidateCategories = data.categories;
+  }
+
+  // ANTI-ADJACENCY: Exclude lastCategory if there are multiple ticked categories
+  let nextCategories = candidateCategories.filter(c => c.id !== lastCategory);
+  if (nextCategories.length === 0) {
+    nextCategories = candidateCategories;
+  }
+
+  // Pick random category from candidate list
+  const selectedCategoryObj = nextCategories[Math.floor(Math.random() * nextCategories.length)];
+
+  let wordPool = selectedCategoryObj.words.map(w => ({ ...w, categoryId: selectedCategoryObj.id }));
+
+  // Include custom words if checked
+  if (Array.isArray(categoryParam) && categoryParam.includes('custom_only') && customWords.length > 0) {
+    wordPool.push(...customWords.map(w => ({ ...w, categoryId: 'custom_only' })));
   }
 
   // Filter out recent words to avoid duplicate adjacent words
   let availableWords = wordPool.filter(w => w.word !== lastWord && !usedWords.has(w.word));
-
-  // If pool exhausted, reset and filter out only the single last word
   if (availableWords.length === 0) {
     availableWords = wordPool.filter(w => w.word !== lastWord);
   }
@@ -75,14 +83,13 @@ function getRandomWord(categoryId = 'general', customWords = [], roomState = {})
 
   // Update room state history
   if (roomState) {
-    roomState.lastCategory = selectedWordEntry.categoryId || categoryId;
+    roomState.lastCategory = selectedWordEntry.categoryId || selectedCategoryObj.id;
     roomState.lastWord = selectedWordEntry.word;
     if (!roomState.usedWords) {
       roomState.usedWords = new Set();
     }
     roomState.usedWords.add(selectedWordEntry.word);
 
-    // Keep history manageable
     if (roomState.usedWords.size > 50) {
       roomState.usedWords.clear();
     }

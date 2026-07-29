@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { getSocket } from '@/lib/socket';
-import { GameState, MyRole, Player, VoteResult, RoomSettings } from '@/types/game';
+import { GameState, MyRole, Player, VoteResult, RoomSettings, CustomWord } from '@/types/game';
 
 const initialState: GameState = {
   phase: 'lobby',
@@ -11,7 +11,7 @@ const initialState: GameState = {
   settings: {
     maxPlayers: 10,
     imposterCount: 1,
-    votingTimerSeconds: 60,
+    votingTimerSeconds: 5,
     wordCategory: 'general',
     hintMode: false,
     meaningMode: false,
@@ -24,6 +24,7 @@ const initialState: GameState = {
   timer: null,
   categories: [],
   customWordCount: 0,
+  customWords: [],
   error: null,
 };
 
@@ -55,6 +56,8 @@ export function useGame(initialRoomCode: string = '') {
         players: room?.players ?? [player],
         settings: room?.settings ?? s.settings,
         categories: room?.categories ?? s.categories,
+        customWords: room?.customWords ?? [],
+        customWordCount: room?.customWords?.length ?? 0,
         error: null,
       }));
     });
@@ -66,6 +69,8 @@ export function useGame(initialRoomCode: string = '') {
         players: room.players,
         settings: room.settings,
         categories: room.categories,
+        customWords: room.customWords ?? [],
+        customWordCount: room.customWords?.length ?? 0,
         isHost: room.players.find((p: Player) => p.id === s.myId)?.isHost || false,
         error: null,
       }));
@@ -90,8 +95,12 @@ export function useGame(initialRoomCode: string = '') {
       setState(s => ({ ...s, customWordCount: count }));
     });
 
-    socket.on('room:customWordsUpdated', ({ count }) => {
-      setState(s => ({ ...s, customWordCount: count }));
+    socket.on('room:customWordsUpdated', ({ customWords, count }) => {
+      setState(s => ({
+        ...s,
+        customWords: customWords ?? s.customWords,
+        customWordCount: count ?? customWords?.length ?? s.customWordCount,
+      }));
     });
 
     socket.on('room:hostMigrated', ({ newHostId }) => {
@@ -205,6 +214,10 @@ export function useGame(initialRoomCode: string = '') {
       socket.emit('room:updateSettings', { settings }),
     addCustomWord: (word: string, meaning: string, hint: string) =>
       socket.emit('room:addCustomWord', { word, meaning, hint }),
+    editCustomWord: (index: number, word: string, meaning: string, hint: string) =>
+      socket.emit('room:editCustomWord', { index, word, meaning, hint }),
+    deleteCustomWord: (index: number) =>
+      socket.emit('room:deleteCustomWord', { index }),
     changeColor: (colorId: string) =>
       socket.emit('player:colorChange', { colorId }),
     leaveRoom: () => {

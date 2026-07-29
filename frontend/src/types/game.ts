@@ -47,11 +47,13 @@ export interface RoomSettings {
   imposterCount: number;
   votingTimerSeconds: number;
   wordCategory: string;
+  selectedCategories?: string[];
   hintMode: boolean;
   meaningMode: boolean;
 }
 
 export interface CustomWord {
+  id?: string;
   word: string;
   meaning: string;
   hint: string;
@@ -111,5 +113,6 @@ export interface GameState {
   timer: number | null;
   categories: { id: string; label: string }[];
   customWordCount: number;
+  customWords: CustomWord[];
   error: string | null;
 }

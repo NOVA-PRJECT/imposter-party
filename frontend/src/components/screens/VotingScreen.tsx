@@ -34,9 +34,9 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
   const selectedPlayer = players.find(p => p.id === selectedTargetId);
 
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center p-3 sm:p-6 bg-zinc-950">
+    <div className="flex flex-col min-h-[100dvh] items-center justify-center p-3 sm:p-6 bg-zinc-950 w-full">
       {/* Among Us Emergency Tablet Frame */}
-      <div className="w-full max-w-2xl bg-zinc-900 border-4 sm:border-8 border-red-900/80 rounded-3xl p-4 sm:p-6 shadow-2xl shadow-red-950/50 flex flex-col justify-between space-y-4">
+      <div className="w-full max-w-md sm:max-w-2xl lg:max-w-4xl bg-zinc-900 border-4 sm:border-8 border-red-900/80 rounded-3xl p-4 sm:p-6 shadow-2xl shadow-red-950/50 flex flex-col justify-between space-y-4">
         
         {/* Tablet Top Bar */}
         <div className="flex items-center justify-between border-b-2 border-zinc-800 pb-3">
@@ -63,7 +63,6 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
             const isVotedByMe = myVote === p.id;
             const isSelected = selectedTargetId === p.id;
 
-            // Extract voters for this player during proceeding phase
             const targetBreakdown = voteBreakdown?.find(b => b.targetId === p.id);
             const voters = targetBreakdown?.voters || [];
 
@@ -89,24 +88,24 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
 
         {/* Vote Confirmation Bar / Selected Target Bar */}
         {selectedPlayer && !hasVoted && !isProceeding && (
-          <div className="bg-zinc-800 border-2 border-yellow-400 rounded-xl p-3 flex items-center justify-between animate-fadeIn">
+          <div className="bg-zinc-800 border-2 border-yellow-400 rounded-xl p-3 sm:p-4 flex items-center justify-between animate-fadeIn">
             <div className="text-sm">
               <span className="text-zinc-400 block text-xs uppercase font-mono">Confirm Vote For:</span>
-              <span className="font-black text-white text-base">{selectedPlayer.name}</span>
+              <span className="font-black text-white text-base sm:text-lg">{selectedPlayer.name}</span>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedTargetId(null)}
-                className="px-3 py-1.5 rounded-lg bg-zinc-700 text-zinc-300 font-bold text-xs hover:bg-zinc-600 active:scale-95"
+                className="px-3 sm:px-4 py-2 rounded-lg bg-zinc-700 text-zinc-300 font-bold text-xs sm:text-sm hover:bg-zinc-600 active:scale-95 transition-transform"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmVote}
-                className="px-4 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-black text-xs shadow-lg shadow-red-600/30 active:scale-95 uppercase tracking-wider"
+                className="px-4 sm:px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-red-600/30 active:scale-95 transition-transform uppercase tracking-wider"
               >
                 CONFIRM VOTE ✓
               </button>
@@ -116,7 +115,7 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
 
         {/* Bottom Bar: Status Message & Among Us Style Timer */}
         <div className="flex items-center justify-between border-t-2 border-zinc-800 pt-3">
-          <div className="text-xs font-mono">
+          <div className="text-xs sm:text-sm font-mono">
             {isProceeding ? (
               <span className="text-yellow-400 font-bold animate-pulse">
                 Revealing votes... Ejection in 5s!
@@ -132,7 +131,7 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
             )}
           </div>
 
-          <div className="font-mono text-sm font-black text-zinc-300 bg-zinc-800 px-3 py-1 rounded border border-zinc-700">
+          <div className="font-mono text-sm sm:text-base font-black text-zinc-300 bg-zinc-800 px-3.5 py-1.5 rounded border border-zinc-700">
             {isProceeding ? 'Ejection In:' : 'Voting Ends In:'}{' '}
             <span className="text-accent">{timer !== null ? `${timer}s` : '5s'}</span>
           </div>
