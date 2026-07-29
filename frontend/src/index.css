@@ -3,26 +3,114 @@
 @tailwind utilities;
 
 @layer base {
+  /* Default Light Theme */
+  :root,
+  [data-theme="light"] {
+    --bg-primary: #F4F5F7;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #E5E7EB;
+    --text-main: #111827;
+    --text-muted: #4B5563;
+    --accent-color: #D90429;
+    --accent-dim: #9D0208;
+    --border-color: #D1D5DB;
+  }
+
+  /* Dark Theme / Cyber Neon */
+  [data-theme="dark"],
+  [data-theme="cyber-neon"] {
+    --bg-primary: #0A0A0A;
+    --bg-secondary: #141414;
+    --bg-tertiary: #1E1E1E;
+    --text-main: #F0F0F0;
+    --text-muted: #9A9A9A;
+    --accent-color: #FF4D1C;
+    --accent-dim: #C43C15;
+    --border-color: #2A2A2A;
+  }
+
+  /* Matcha Green Theme */
+  [data-theme="matcha"] {
+    --bg-primary: #111F17;
+    --bg-secondary: #1C2E23;
+    --bg-tertiary: #273E30;
+    --text-main: #E8F5E9;
+    --text-muted: #81C784;
+    --accent-color: #55EFC4;
+    --accent-dim: #00B894;
+    --border-color: #2E4B39;
+  }
+
+  /* Space Red (Among Us) Theme */
+  [data-theme="space-red"] {
+    --bg-primary: #120306;
+    --bg-secondary: #24060C;
+    --bg-tertiary: #3D0A14;
+    --text-main: #FFF0F2;
+    --text-muted: #C4929C;
+    --accent-color: #FF1E43;
+    --accent-dim: #B8001F;
+    --border-color: #570F1E;
+  }
+
+  /* Vaporwave Cyberpunk Theme */
+  [data-theme="vaporwave"] {
+    --bg-primary: #0F051D;
+    --bg-secondary: #1D0B38;
+    --bg-tertiary: #2F125B;
+    --text-main: #FBF0FF;
+    --text-muted: #A88AC2;
+    --accent-color: #FF007F;
+    --accent-dim: #B8005C;
+    --border-color: #4D218A;
+  }
+
+  /* Emerald Forest Theme */
+  [data-theme="emerald"] {
+    --bg-primary: #02140B;
+    --bg-secondary: #062615;
+    --bg-tertiary: #0D3D23;
+    --text-main: #E8FFF2;
+    --text-muted: #78B893;
+    --accent-color: #00FF66;
+    --accent-dim: #00B347;
+    --border-color: #165B35;
+  }
+
+  /* Deep Ocean Theme */
+  [data-theme="ocean"] {
+    --bg-primary: #020B18;
+    --bg-secondary: #061833;
+    --bg-tertiary: #0C2952;
+    --text-main: #E6FAFF;
+    --text-muted: #7AAEC4;
+    --accent-color: #00F0FF;
+    --accent-dim: #00A8B3;
+    --border-color: #14427B;
+  }
+
   * {
     -webkit-tap-highlight-color: transparent;
     box-sizing: border-box;
   }
+
   html, body {
     height: 100%;
     min-height: 100dvh;
-    background-color: #0A0A0A;
-    color: #F0F0F0;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-main) !important;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
 @layer utilities {
   .accent-glow {
-    text-shadow: 0 0 20px rgba(255, 77, 28, 0.5);
+    text-shadow: 0 0 20px var(--accent-color);
   }
   .card-glow {
-    box-shadow: 0 0 20px rgba(255, 77, 28, 0.15);
+    box-shadow: 0 0 20px var(--accent-color);
   }
   .min-touch {
     min-height: 44px;
@@ -39,13 +127,13 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--border-color);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 77, 28, 0.4);
+  background: var(--accent-color);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 77, 28, 0.8);
+  background: var(--accent-color);
 }

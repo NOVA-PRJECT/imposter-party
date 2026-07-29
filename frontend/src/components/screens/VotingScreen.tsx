@@ -34,23 +34,23 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
   const selectedPlayer = players.find(p => p.id === selectedTargetId);
 
   return (
-    <div className="flex flex-col min-h-[100dvh] items-center justify-center p-3 sm:p-6 bg-zinc-950 w-full">
+    <div className="flex flex-col min-h-[100dvh] items-center justify-center p-3 sm:p-6 bg-background text-primary w-full">
       {/* Among Us Emergency Tablet Frame */}
-      <div className="w-full max-w-md sm:max-w-2xl lg:max-w-4xl bg-zinc-900 border-4 sm:border-8 border-red-900/80 rounded-3xl p-4 sm:p-6 shadow-2xl shadow-red-950/50 flex flex-col justify-between space-y-4">
+      <div className="w-full max-w-md sm:max-w-2xl lg:max-w-4xl bg-surface border-4 sm:border-8 border-border rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col justify-between space-y-4">
         
         {/* Tablet Top Bar */}
-        <div className="flex items-center justify-between border-b-2 border-zinc-800 pb-3">
-          <div className="flex items-center gap-2 text-zinc-400 font-mono text-xs">
+        <div className="flex items-center justify-between border-b-2 border-border pb-3">
+          <div className="flex items-center gap-2 text-muted font-mono text-xs">
             <span>📶 5G</span>
             <span>• {isProceeding ? 'PROCEEDING' : 'EMERGENCY'}</span>
           </div>
 
-          <h1 className="text-xl sm:text-3xl font-black tracking-wider text-white uppercase text-center font-sans">
+          <h1 className="text-xl sm:text-3xl font-black tracking-wider text-primary uppercase text-center font-sans">
             {isProceeding ? 'PROCEEDING...' : 'Who Is The Impostor?'}
           </h1>
 
-          <div className="flex items-center gap-2 text-zinc-400 font-mono text-xs">
-            <span className="bg-zinc-800 px-2 py-0.5 rounded font-bold text-accent">
+          <div className="flex items-center gap-2 text-muted font-mono text-xs">
+            <span className="bg-surface2 px-2 py-0.5 rounded font-bold text-accent border border-border">
               {isProceeding ? 'TALLY COMPLETE' : `${votedCount}/${totalAlive} VOTED`}
             </span>
           </div>
@@ -88,24 +88,24 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
 
         {/* Vote Confirmation Bar / Selected Target Bar */}
         {selectedPlayer && !hasVoted && !isProceeding && (
-          <div className="bg-zinc-800 border-2 border-yellow-400 rounded-xl p-3 sm:p-4 flex items-center justify-between animate-fadeIn">
+          <div className="bg-surface2 border-2 border-accent rounded-xl p-3 sm:p-4 flex items-center justify-between animate-fadeIn shadow-lg">
             <div className="text-sm">
-              <span className="text-zinc-400 block text-xs uppercase font-mono">Confirm Vote For:</span>
-              <span className="font-black text-white text-base sm:text-lg">{selectedPlayer.name}</span>
+              <span className="text-muted block text-xs uppercase font-mono">Confirm Vote For:</span>
+              <span className="font-black text-primary text-base sm:text-lg">{selectedPlayer.name}</span>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedTargetId(null)}
-                className="px-3 sm:px-4 py-2 rounded-lg bg-zinc-700 text-zinc-300 font-bold text-xs sm:text-sm hover:bg-zinc-600 active:scale-95 transition-transform"
+                className="px-3 sm:px-4 py-2 rounded-lg bg-surface border border-border text-muted font-bold text-xs sm:text-sm hover:text-primary active:scale-95 transition-transform"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmVote}
-                className="px-4 sm:px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-red-600/30 active:scale-95 transition-transform uppercase tracking-wider"
+                className="px-4 sm:px-6 py-2 rounded-lg bg-danger hover:bg-red-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-danger/30 active:scale-95 transition-transform uppercase tracking-wider"
               >
                 CONFIRM VOTE ✓
               </button>
@@ -114,24 +114,24 @@ export default function VotingScreen({ gameState }: VotingScreenProps) {
         )}
 
         {/* Bottom Bar: Status Message & Among Us Style Timer */}
-        <div className="flex items-center justify-between border-t-2 border-zinc-800 pt-3">
+        <div className="flex items-center justify-between border-t-2 border-border pt-3">
           <div className="text-xs sm:text-sm font-mono">
             {isProceeding ? (
-              <span className="text-yellow-400 font-bold animate-pulse">
+              <span className="text-warning font-bold animate-pulse">
                 Revealing votes... Ejection in 5s!
               </span>
             ) : hasVoted ? (
-              <span className="text-green-400 font-bold flex items-center gap-1">
+              <span className="text-success font-bold flex items-center gap-1">
                 ✓ Vote submitted. Waiting for others...
               </span>
             ) : (
-              <span className="text-yellow-400 font-bold animate-pulse">
+              <span className="text-accent font-bold animate-pulse">
                 Tap a player to select & cast your vote
               </span>
             )}
           </div>
 
-          <div className="font-mono text-sm sm:text-base font-black text-zinc-300 bg-zinc-800 px-3.5 py-1.5 rounded border border-zinc-700">
+          <div className="font-mono text-sm sm:text-base font-black text-primary bg-surface2 px-3.5 py-1.5 rounded border border-border">
             {isProceeding ? 'Ejection In:' : 'Voting Ends In:'}{' '}
             <span className="text-accent">{timer !== null ? `${timer}s` : '5s'}</span>
           </div>

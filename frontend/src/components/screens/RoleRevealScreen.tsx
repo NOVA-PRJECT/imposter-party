@@ -16,16 +16,11 @@ export default function RoleRevealScreen({ gameState }: RoleRevealScreenProps) {
   const isImposter = myRole?.isImposter ?? false;
 
   useEffect(() => {
-    // Play identical sci-fi reveal sound for BOTH crewmate & imposter
     playRoleReveal();
   }, []);
 
   return (
-    <div
-      className={`min-h-screen flex flex-col items-center justify-between px-6 py-10 transition-colors ${
-        isImposter ? 'bg-[#1A0000]' : 'bg-[#0A0A0A]'
-      }`}
-    >
+    <div className="min-h-[100dvh] flex flex-col items-center justify-between px-6 py-10 transition-colors bg-background text-primary">
       <div className="w-full max-w-md flex flex-col items-center text-center my-auto space-y-6">
         {/* Role Badge */}
         {isImposter ? (
@@ -49,7 +44,7 @@ export default function RoleRevealScreen({ gameState }: RoleRevealScreenProps) {
             </h1>
 
             {myRole?.hint && (
-              <div className="mt-4 p-4 rounded-card bg-surface/50 border border-border">
+              <div className="mt-4 p-4 rounded-card bg-surface border border-border">
                 <span className="text-xs text-muted font-mono uppercase block mb-1">
                   Your Hint
                 </span>
@@ -60,7 +55,7 @@ export default function RoleRevealScreen({ gameState }: RoleRevealScreenProps) {
             )}
 
             {myRole?.fellowImposters && myRole.fellowImposters.length > 0 && (
-              <div className="mt-4 p-4 rounded-card bg-surface/50 border border-border">
+              <div className="mt-4 p-4 rounded-card bg-surface border border-border">
                 <span className="text-xs text-muted font-mono uppercase block mb-2">
                   Fellow Imposters
                 </span>
@@ -89,7 +84,7 @@ export default function RoleRevealScreen({ gameState }: RoleRevealScreenProps) {
             </h1>
 
             {myRole?.meaning && (
-              <div className="mt-4 p-4 rounded-card bg-surface/50 border border-border max-w-sm">
+              <div className="mt-4 p-4 rounded-card bg-surface border border-border max-w-sm">
                 <span className="text-xs text-muted font-mono uppercase block mb-1">
                   Meaning
                 </span>
@@ -107,7 +102,7 @@ export default function RoleRevealScreen({ gameState }: RoleRevealScreenProps) {
       </div>
 
       {/* Host Controls / Footer */}
-      <div className="w-full max-w-md pt-6 border-t border-border/40 text-center">
+      <div className="w-full max-w-md pt-6 border-t border-border text-center">
         {isHost ? (
           <Button onClick={actions.discussionReady} variant="accent" fullWidth>
             Everyone's Ready — Start Discussion

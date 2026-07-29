@@ -18,7 +18,6 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
   const isImposter = myRole?.isImposter ?? false;
 
   useEffect(() => {
-    // Play uniform role reveal sound for all players on screen load
     playRoleReveal();
   }, []);
 
@@ -29,16 +28,16 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
   };
 
   return (
-    <div className="flex flex-col min-h-screen px-4 py-6 max-w-md mx-auto justify-between space-y-4">
+    <div className="flex flex-col min-h-[100dvh] px-4 py-6 max-w-md sm:max-w-xl w-full mx-auto justify-between space-y-4 bg-background text-primary">
       {/* Header */}
       <div className="text-center space-y-1">
         <span className="text-xs uppercase font-mono tracking-widest text-accent font-bold">
           Discussion Phase
         </span>
-        <h1 className="text-3xl font-black tracking-tight text-white uppercase">
+        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-primary uppercase">
           DISCUSS & FIND IMPOSTER
         </h1>
-        <p className="text-xs text-zinc-400">Talk out loud in the room without giving away the word!</p>
+        <p className="text-xs text-muted">Talk out loud in the room without giving away the word!</p>
       </div>
 
       {/* 3D Animated Secret Word / Role Card */}
@@ -46,19 +45,19 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
         <div
           className={`relative w-full rounded-2xl p-5 border-2 transition-all duration-500 transform-gpu shadow-2xl ${
             isImposter
-              ? 'bg-gradient-to-br from-red-950 to-zinc-900 border-red-600 shadow-red-950/50'
-              : 'bg-gradient-to-br from-zinc-900 to-zinc-950 border-accent/60 shadow-accent/20'
+              ? 'bg-surface border-danger shadow-danger/20'
+              : 'bg-surface border-accent shadow-accent/20'
           } ${isWordVisible ? 'scale-100 rotate-0' : 'scale-95 opacity-90'}`}
         >
           {/* Card Top Label & Peek Toggle */}
-          <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-400">
+          <div className="flex items-center justify-between border-b border-border pb-3 mb-3">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-muted">
               {isImposter ? '🔴 Your Role' : '🟢 Secret Word'}
             </span>
             <button
               type="button"
               onClick={() => setIsWordVisible(!isWordVisible)}
-              className="text-xs font-mono font-bold text-accent bg-surface2 px-2.5 py-1 rounded-full border border-border hover:border-accent"
+              className="text-xs font-mono font-bold text-accent bg-surface2 px-2.5 py-1 rounded-full border border-border hover:border-accent transition-colors"
             >
               {isWordVisible ? '🙈 Hide Info' : '👁️ Peek Secret Info'}
             </button>
@@ -73,12 +72,12 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
                     YOU ARE THE IMPOSTER
                   </h2>
                   {myRole?.hint ? (
-                    <div className="mt-3 p-3 rounded-xl bg-black/40 border border-yellow-500/30 inline-block">
-                      <span className="text-xs text-zinc-400 block uppercase font-mono mb-0.5">Clue Hint:</span>
-                      <span className="text-lg font-bold text-yellow-400 font-mono">"{myRole.hint}"</span>
+                    <div className="mt-3 p-3 rounded-xl bg-surface2 border border-warning/30 inline-block">
+                      <span className="text-xs text-muted block uppercase font-mono mb-0.5">Clue Hint:</span>
+                      <span className="text-lg font-bold text-warning font-mono">"{myRole.hint}"</span>
                     </div>
                   ) : (
-                    <p className="text-xs italic text-zinc-400 mt-2">No hint enabled. Fake confidence!</p>
+                    <p className="text-xs italic text-muted mt-2">No hint enabled. Fake confidence!</p>
                   )}
                 </div>
               ) : (
@@ -87,7 +86,7 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
                     {myRole?.word || '???'}
                   </h2>
                   {myRole?.meaning && (
-                    <p className="text-xs text-zinc-300 mt-2 p-2.5 rounded-lg bg-black/30 border border-white/5">
+                    <p className="text-xs text-muted mt-2 p-2.5 rounded-lg bg-surface2 border border-border">
                       {myRole.meaning}
                     </p>
                   )}
@@ -95,7 +94,7 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
               )}
             </div>
           ) : (
-            <div className="text-center py-6 text-zinc-500 font-mono text-xs italic">
+            <div className="text-center py-6 text-muted font-mono text-xs italic">
               🔒 Information Hidden. Tap "Peek Secret Info" to view.
             </div>
           )}
@@ -103,7 +102,7 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
       </div>
 
       {/* Players Status List */}
-      <div className="bg-surface border border-border rounded-card p-4 space-y-2">
+      <div className="bg-surface border border-border rounded-card p-4 space-y-2 shadow-lg">
         <h3 className="text-xs font-mono uppercase tracking-wider text-muted">
           Players Status ({players.filter(p => p.isAlive).length} Alive)
         </h3>
@@ -113,12 +112,12 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
               key={p.id}
               className={`flex items-center gap-2 p-2 rounded-card border ${
                 p.isAlive
-                  ? 'bg-surface2 border-border'
-                  : 'bg-surface2/30 border-border opacity-40 line-through'
+                  ? 'bg-surface2 border-border text-primary'
+                  : 'bg-surface2/30 border-border opacity-40 line-through text-muted'
               }`}
             >
               <ColorCircle colorId={p.color} size="sm" />
-              <span className="text-xs font-medium truncate text-primary">
+              <span className="text-xs font-medium truncate">
                 {p.name}
               </span>
               {!p.isAlive && (
@@ -135,7 +134,7 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
       <div className="pt-2">
         {isHost ? (
           showConfirm ? (
-            <div className="p-4 rounded-card bg-surface border border-accent space-y-3 text-center">
+            <div className="p-4 rounded-card bg-surface border border-accent space-y-3 text-center shadow-xl">
               <span className="text-sm font-bold text-primary block">
                 Start voting process now?
               </span>

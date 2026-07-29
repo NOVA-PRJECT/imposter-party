@@ -24,18 +24,14 @@ export default function GameOverScreen({ gameState }: GameOverScreenProps) {
   }, []);
 
   return (
-    <div
-      className={`min-h-screen flex flex-col items-center justify-between px-4 py-8 max-w-md mx-auto transition-colors ${
-        isCrewmateWin ? 'bg-[#001A0A]' : 'bg-[#1A0000]'
-      }`}
-    >
+    <div className="min-h-[100dvh] flex flex-col items-center justify-between px-4 py-8 max-w-md sm:max-w-lg mx-auto transition-colors bg-background text-primary">
       <div className="w-full space-y-6 text-center my-auto">
         {/* Victory Header */}
         <div>
           {isCrewmateWin ? (
             <div className="space-y-2">
               <span className="text-5xl">🎉</span>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-success accent-glow">
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-success accent-glow">
                 CREWMATES WIN
               </h1>
               <p className="text-xs text-muted">All imposters were eliminated!</p>
@@ -43,7 +39,7 @@ export default function GameOverScreen({ gameState }: GameOverScreenProps) {
           ) : (
             <div className="space-y-2">
               <span className="text-5xl">🔴</span>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-danger accent-glow">
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-danger accent-glow">
                 IMPOSTERS WIN
               </h1>
               <p className="text-xs text-muted">The imposters took over the group!</p>
@@ -53,18 +49,18 @@ export default function GameOverScreen({ gameState }: GameOverScreenProps) {
 
         {/* Revealed Secret Word */}
         {word && (
-          <div className="p-4 rounded-card bg-surface/60 border border-border">
+          <div className="p-4 rounded-card bg-surface border border-border">
             <span className="text-xs font-mono uppercase text-muted block mb-1">
               The Secret Word Was
             </span>
-            <span className="text-2xl font-bold text-accent font-sans">
+            <span className="text-2xl sm:text-3xl font-bold text-accent font-sans">
               "{word}"
             </span>
           </div>
         )}
 
         {/* Full Player Identity List */}
-        <div className="bg-surface border border-border rounded-card p-4 space-y-3 text-left">
+        <div className="bg-surface border border-border rounded-card p-4 sm:p-5 space-y-3 text-left shadow-lg">
           <h3 className="text-xs font-mono uppercase tracking-wider text-muted mb-2">
             Player Identities
           </h3>
@@ -102,7 +98,7 @@ export default function GameOverScreen({ gameState }: GameOverScreenProps) {
       </div>
 
       {/* Action Buttons */}
-      <div className="w-full space-y-2 pt-4 border-t border-border/40">
+      <div className="w-full space-y-2 pt-4 border-t border-border">
         {isHost && (
           <Button onClick={actions.playAgain} variant="accent" fullWidth>
             Play Again (Keep Room)
