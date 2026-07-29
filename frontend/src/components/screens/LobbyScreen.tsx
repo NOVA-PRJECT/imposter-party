@@ -44,7 +44,7 @@ export default function LobbyScreen({ gameState }: LobbyScreenProps) {
 const canStart = onlinePlayers.length >= 3 && settings.imposterCount <= maxImpostersAllowed;
 
   const maxImpostersAllowed = Math.max(1, Math.ceil(players.length / 5));
-  const canStart = players.length >= 3 && settings.imposterCount <= maxImpostersAllowed;
+
 
   // Selected categories list
   const selectedCatIds = settings.selectedCategories || [];
