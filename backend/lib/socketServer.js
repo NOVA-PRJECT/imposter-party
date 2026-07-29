@@ -72,6 +72,17 @@ function initSocketServer(io) {
         const { room, newPlayer } = joinRoom(cleanCode, socket.id, cleanName);
         socket.join(room.code);
 
+        // Reconnection: if a player with same name was disconnected, restore them
+const rejoining = room.players.find(p => p.name === cleanName && p.disconnected);
+if (rejoining) {
+  if (rejoining.disconnectTimer) {
+    clearTimeout(rejoining.disconnectTimer);
+    rejoining.disconnectTimer = null;
+  }
+  rejoining.disconnected = false;
+  rejoining.id = socket.id;
+}
+
         const safeRoomView = {
           code: room.code,
           players: safePlayerList(room),
