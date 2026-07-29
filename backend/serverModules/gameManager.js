@@ -3,10 +3,10 @@ const { getMaxImposters } = require('./utils/imposterRules');
 const { safePlayerList, rooms } = require('./roomManager');
 
 function startGame(room, io) {
-  const playerCount = room.players.length;
-  if (playerCount < 3) {
-    throw new Error('Need at least 3 players to start game');
-  }
+  const playerCount = room.players.filter(p => !p.disconnected).length;
+if (playerCount < 3) {
+  throw new Error('Need at least 3 players to start game');
+}
 
   const maxImpostersAllowed = getMaxImposters(playerCount);
   if (room.settings.imposterCount > maxImpostersAllowed) {
