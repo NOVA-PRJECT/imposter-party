@@ -13,7 +13,8 @@ function startGame(room, io) {
     throw new Error(`Maximum ${maxImpostersAllowed} imposter(s) allowed for ${playerCount} players`);
   }
 
-  const selectedEntry = getRandomWord(room.settings.wordCategory, room.customWords);
+  // Pass room state to enforce anti-adjacency across categories & words
+  const selectedEntry = getRandomWord(room.settings.wordCategory, room.customWords, room);
   room.currentWord = selectedEntry.word;
   room.currentMeaning = selectedEntry.meaning;
   room.currentHint = selectedEntry.hint;
@@ -83,7 +84,8 @@ function emitRoles(room, io) {
 }
 
 function nextRound(room, io) {
-  const selectedEntry = getRandomWord(room.settings.wordCategory, room.customWords);
+  // Pass room state to enforce anti-adjacency across categories & words
+  const selectedEntry = getRandomWord(room.settings.wordCategory, room.customWords, room);
   room.currentWord = selectedEntry.word;
   room.currentMeaning = selectedEntry.meaning;
   room.currentHint = selectedEntry.hint;
