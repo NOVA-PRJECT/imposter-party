@@ -40,7 +40,8 @@ export default function LobbyScreen({ gameState }: LobbyScreenProps) {
 
   const me = players.find(p => p.id === myId);
   const myColor = me?.color || 'red';
-  const occupiedColors = players.map(p => p.color);
+  const onlinePlayers = players.filter(p => !p.disconnected);
+const canStart = onlinePlayers.length >= 3 && settings.imposterCount <= maxImpostersAllowed;
 
   const maxImpostersAllowed = Math.max(1, Math.ceil(players.length / 5));
   const canStart = players.length >= 3 && settings.imposterCount <= maxImpostersAllowed;
@@ -474,8 +475,7 @@ export default function LobbyScreen({ gameState }: LobbyScreenProps) {
             disabled={!canStart}
             className="mt-4"
           >
-            {players.length < 3 ? 'Need at least 3 players' : 'START GAME'}
-          </Button>
+            {onlinePlayers.length < 3 ? 'Need at least 3 players' : 'START GAME'}
         </div>
       ) : (
         <div className="bg-surface border border-border rounded-card p-5 sm:p-6 space-y-4 shadow-xl">
