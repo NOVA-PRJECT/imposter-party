@@ -403,9 +403,18 @@ function handlePlayerLeave(socket, io, isDisconnecting = false) {
 
   if (isDisconnecting) {
     player.disconnected = true;
+    player.disconnectExpiresAt = Date.now() + 10000;
+
+    // Immediately broadcast updated player list so all clients see offline countdown
+    io.to(room.code).emit('room:updated', { players: safePlayerList(room) });
+
+    if (player.disconnectTimer) {
+      clearTimeout(player.disconnectTimer);
+    }
+
     player.disconnectTimer = setTimeout(() => {
       removePlayerAndMigrateHost(room, socket.id, io);
-    }, 30000);
+    }, 10000);
   } else {
     removePlayerAndMigrateHost(room, socket.id, io);
   }

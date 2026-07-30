@@ -12,12 +12,21 @@ interface VoteResultScreenProps {
 export default function VoteResultScreen({ gameState }: VoteResultScreenProps) {
   const { voteResult, isHost, actions } = gameState;
   const [revealed, setRevealed] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const revealTimer = setTimeout(() => {
       setRevealed(true);
-    }, 1200);
-    return () => clearTimeout(timer);
+    }, 400);
+
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => {
+      clearTimeout(revealTimer);
+      clearInterval(countdownInterval);
+    };
   }, []);
 
   if (!voteResult) {
@@ -91,16 +100,15 @@ export default function VoteResultScreen({ gameState }: VoteResultScreenProps) {
         </div>
       </div>
 
-      {/* Host / Non-Host Actions */}
-      <div className="pt-4 border-t border-border">
-        {isHost ? (
+      {/* Auto-Advance & Host Actions */}
+      <div className="pt-4 border-t border-border text-center space-y-3">
+        <div className="text-sm font-mono text-accent font-bold animate-pulse">
+          Starting Next Round in {countdown}s... 🔔
+        </div>
+        {isHost && (
           <Button onClick={actions.nextRound} variant="accent" fullWidth>
-            Start Next Round
+            Start Next Round Now ⏩
           </Button>
-        ) : (
-          <p className="text-sm text-center text-muted font-mono animate-pulse">
-            Waiting for host to start next round...
-          </p>
         )}
       </div>
     </div>

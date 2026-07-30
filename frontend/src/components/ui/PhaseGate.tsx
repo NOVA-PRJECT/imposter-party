@@ -6,6 +6,7 @@ import DiscussionScreen from '@/components/screens/DiscussionScreen';
 import VotingScreen from '@/components/screens/VotingScreen';
 import VoteResultScreen from '@/components/screens/VoteResultScreen';
 import GameOverScreen from '@/components/screens/GameOverScreen';
+import DeadScreen from '@/components/screens/DeadScreen';
 
 interface PhaseGateProps {
   gameState: GameState & {
@@ -14,7 +15,15 @@ interface PhaseGateProps {
 }
 
 export default function PhaseGate({ gameState }: PhaseGateProps) {
-  const { phase } = gameState;
+  const { phase, players, myId } = gameState;
+
+  const me = players.find(p => p.id === myId);
+  const isDead = me ? !me.isAlive : false;
+
+  // If local player is dead during active gameplay phases, show full black-and-white DeadScreen
+  if (isDead && (phase === 'discussion' || phase === 'voting' || phase === 'proceeding')) {
+    return <DeadScreen gameState={gameState} />;
+  }
 
   switch (phase) {
     case 'lobby':

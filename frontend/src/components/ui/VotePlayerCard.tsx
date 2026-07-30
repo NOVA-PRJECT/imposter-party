@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Player, ColorId } from '@/types/game';
 import ColorCircle from './ColorCircle';
 
@@ -24,7 +24,25 @@ export default function VotePlayerCard({
   onSelect,
 }: VotePlayerCardProps) {
   const isAlive = player.isAlive;
-  const canSelect = !isMe && !hasVoted && isAlive && !isProceeding;
+  const canSelect = !isMe && !hasVoted && isAlive && !isProceeding && !player.disconnected;
+
+  const [timeLeft, setTimeLeft] = useState<number>(() => {
+    if (!player.disconnectExpiresAt) return 10;
+    return Math.max(0, Math.ceil((player.disconnectExpiresAt - Date.now()) / 1000));
+  });
+
+  useEffect(() => {
+    if (!player.disconnected || !player.disconnectExpiresAt) return;
+
+    const updateTimer = () => {
+      const remaining = Math.max(0, Math.ceil((player.disconnectExpiresAt! - Date.now()) / 1000));
+      setTimeLeft(remaining);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [player.disconnected, player.disconnectExpiresAt]);
 
   return (
     <div className="flex flex-col space-y-1">
@@ -33,6 +51,8 @@ export default function VotePlayerCard({
         className={`relative flex items-center gap-3 p-3 rounded-lg border-2 transition-all select-none ${
           !isAlive
             ? 'bg-surface2/40 border-border opacity-50 cursor-not-allowed'
+            : player.disconnected
+            ? 'bg-surface2/40 border-danger/40 opacity-70 cursor-not-allowed'
             : isSelected || isVotedByMe
             ? 'bg-surface border-accent ring-4 ring-accent/30 shadow-lg scale-[1.02]'
             : canSelect
@@ -74,11 +94,15 @@ export default function VotePlayerCard({
           >
             {player.name}
           </span>
-          {isMe && (
+          {isMe ? (
             <span className="text-[10px] uppercase font-mono font-bold text-muted block -mt-0.5">
               (You)
             </span>
-          )}
+          ) : player.disconnected ? (
+            <span className="text-[10px] font-mono font-bold text-danger animate-pulse block -mt-0.5">
+              Offline ({timeLeft}s)
+            </span>
+          ) : null}
         </div>
 
         {/* Checkmark / Selected Badges */}

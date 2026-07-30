@@ -148,19 +148,19 @@ function tallyVotes(roomCode, io) {
 
   room.phase = 'proceeding';
 
-  // Broadcast 5-second PROCEEDING phase with voter breakdown
+  // Broadcast 3-second PROCEEDING phase with voter breakdown
   io.to(roomCode).emit('game:phaseChanged', {
     phase: 'proceeding',
-    timerSeconds: 5,
+    timerSeconds: 3,
     serverTimestamp: Date.now(),
     players: safePlayerList(room),
     voteBreakdown,
   });
 
-  // After 5 seconds, finalize ejection & vote result
+  // After 3 seconds, finalize ejection & vote result
   setTimeout(() => {
     finalizeVoteResult(roomCode, io);
-  }, 5000);
+  }, 3000);
 }
 
 function finalizeVoteResult(roomCode, io) {
@@ -212,6 +212,15 @@ function finalizeVoteResult(roomCode, io) {
   }
 
   io.to(roomCode).emit('game:voteResult', payload);
+
+  // Automatically advance to next round after 3 seconds if game is not over
+  if (!winCondition) {
+    setTimeout(() => {
+      if (room.phase === 'vote-result') {
+        nextRound(room, io);
+      }
+    }, 3000);
+  }
 }
 
 function checkWinCondition(room) {

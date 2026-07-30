@@ -27,6 +27,7 @@ export interface Player {
   hasVoted: boolean;
   voteCount: number;
   disconnected: boolean;
+  disconnectExpiresAt?: number | null;
 }
 
 export interface MyRole {

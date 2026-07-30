@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GameState } from '@/types/game';
 import ColorCircle from '@/components/ui/ColorCircle';
 import Button from '@/components/ui/Button';
-import { playEmergencyMeeting, playRoleReveal } from '@/lib/audioManager';
+import { playEmergencyMeeting, playRoleReveal, playNewRound } from '@/lib/audioManager';
 
 interface DiscussionScreenProps {
   gameState: GameState & {
@@ -18,6 +18,7 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
   const isImposter = myRole?.isImposter ?? false;
 
   useEffect(() => {
+    playNewRound();
     playRoleReveal();
   }, []);
 
@@ -71,12 +72,31 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
                   <h2 className="text-3xl font-black text-danger tracking-wider uppercase animate-pulse">
                     YOU ARE THE IMPOSTER
                   </h2>
-                  {myRole?.hint ? (
+                  {myRole?.hint && (
                     <div className="mt-3 p-3 rounded-xl bg-surface2 border border-warning/30 inline-block">
                       <span className="text-xs text-muted block uppercase font-mono mb-0.5">Clue Hint:</span>
                       <span className="text-lg font-bold text-warning font-mono">"{myRole.hint}"</span>
                     </div>
-                  ) : (
+                  )}
+                  {myRole?.fellowImposters && myRole.fellowImposters.length > 0 && (
+                    <div className="mt-3 p-3 rounded-xl bg-surface2 border border-danger/30 space-y-1.5">
+                      <span className="text-xs text-muted font-mono uppercase block">
+                        Fellow Imposter(s):
+                      </span>
+                      <div className="flex flex-wrap items-center justify-center gap-2">
+                        {myRole.fellowImposters.map((imp, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-lg border border-danger/40"
+                          >
+                            <ColorCircle colorId={imp.color} size="sm" />
+                            <span className="text-xs font-bold text-danger">{imp.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {!myRole?.hint && (
                     <p className="text-xs italic text-muted mt-2">No hint enabled. Fake confidence!</p>
                   )}
                 </div>
@@ -107,26 +127,39 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
           Players Status ({players.filter(p => p.isAlive).length} Alive)
         </h3>
         <div className="grid grid-cols-2 gap-2">
-          {players.map(p => (
-            <div
-              key={p.id}
-              className={`flex items-center gap-2 p-2 rounded-card border ${
-                p.isAlive
-                  ? 'bg-surface2 border-border text-primary'
-                  : 'bg-surface2/30 border-border opacity-40 line-through text-muted'
-              }`}
-            >
-              <ColorCircle colorId={p.color} size="sm" />
-              <span className="text-xs font-medium truncate">
-                {p.name}
-              </span>
-              {!p.isAlive && (
-                <span className="text-[10px] text-danger ml-auto font-mono no-underline">
-                  Dead
+          {players.map(p => {
+            const isOffline = p.disconnected;
+            const remaining = p.disconnectExpiresAt
+              ? Math.max(0, Math.ceil((p.disconnectExpiresAt - Date.now()) / 1000))
+              : 10;
+
+            return (
+              <div
+                key={p.id}
+                className={`flex items-center gap-2 p-2 rounded-card border ${
+                  !p.isAlive
+                    ? 'bg-surface2/30 border-border opacity-40 line-through text-muted'
+                    : isOffline
+                    ? 'bg-surface2/50 border-danger/40 text-muted opacity-70'
+                    : 'bg-surface2 border-border text-primary'
+                }`}
+              >
+                <ColorCircle colorId={p.color} size="sm" />
+                <span className="text-xs font-medium truncate">
+                  {p.name}
                 </span>
-              )}
-            </div>
-          ))}
+                {!p.isAlive ? (
+                  <span className="text-[10px] text-danger ml-auto font-mono no-underline">
+                    Dead
+                  </span>
+                ) : isOffline ? (
+                  <span className="text-[10px] text-danger ml-auto font-mono font-bold animate-pulse no-underline shrink-0">
+                    Offline ({remaining}s)
+                  </span>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       </div>
 

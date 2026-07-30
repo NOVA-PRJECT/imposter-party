@@ -16,7 +16,7 @@ setInterval(() => {
 }, 10 * 60 * 1000);
 
 function safePlayerList(room) {
-  return room.players.map(({ id, name, color, isHost, isAlive, hasVoted, voteCount, disconnected }) => ({
+  return room.players.map(({ id, name, color, isHost, isAlive, hasVoted, voteCount, disconnected, disconnectExpiresAt }) => ({
     id,
     name,
     color,
@@ -25,6 +25,7 @@ function safePlayerList(room) {
     hasVoted,
     voteCount,
     disconnected,
+    disconnectExpiresAt: disconnected ? disconnectExpiresAt : null,
   }));
 }
 
@@ -100,6 +101,7 @@ function joinRoom(code, socketId, playerName, reconnectToken = null) {
         existingPlayer.disconnectTimer = null;
       }
       existingPlayer.disconnected = false;
+      existingPlayer.disconnectExpiresAt = null;
       existingPlayer.id = socketId;
       return { room, newPlayer: existingPlayer, isRejoining: true };
     }
