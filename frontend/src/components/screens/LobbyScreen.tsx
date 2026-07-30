@@ -41,9 +41,9 @@ export default function LobbyScreen({ gameState }: LobbyScreenProps) {
   const me = players.find(p => p.id === myId);
   const myColor = me?.color || 'red';
   const onlinePlayers = players.filter(p => !p.disconnected);
-const canStart = onlinePlayers.length >= 3 && settings.imposterCount <= maxImpostersAllowed;
-
   const maxImpostersAllowed = Math.max(1, Math.ceil(players.length / 5));
+  const canStart = onlinePlayers.length >= 3 && settings.imposterCount <= maxImpostersAllowed;
+  const occupiedColors = players.map(p => p.color);
 
 
   // Selected categories list
@@ -279,10 +279,11 @@ const canStart = onlinePlayers.length >= 3 && settings.imposterCount <= maxImpos
               }
               className="w-full px-3.5 py-3 bg-surface2 border border-border rounded-card text-primary text-sm sm:text-base font-mono focus:outline-none focus:border-accent cursor-pointer"
             >
-              <option value={5}>5 Seconds (Default)</option>
-              <option value={10}>10 Seconds</option>
-              <option value={15}>15 Seconds</option>
-              <option value={20}>20 Seconds</option>
+              {Array.from({ length: 26 }, (_, i) => i + 5).map(sec => (
+                <option key={sec} value={sec}>
+                  {sec} Seconds{sec === 10 ? ' (Default)' : ''}
+                </option>
+              ))}
               <option value={0}>No Timer (Manual)</option>
             </select>
           </div>
@@ -476,6 +477,7 @@ const canStart = onlinePlayers.length >= 3 && settings.imposterCount <= maxImpos
             className="mt-4"
           >
             {onlinePlayers.length < 3 ? 'Need at least 3 players' : 'START GAME'}
+          </Button>
         </div>
       ) : (
         <div className="bg-surface border border-border rounded-card p-5 sm:p-6 space-y-4 shadow-xl">

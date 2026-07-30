@@ -132,6 +132,17 @@ if (rejoining) {
           settings.maxPlayers = newMax;
         }
 
+        if (settings.votingTimerSeconds !== undefined) {
+          const timerVal = parseInt(settings.votingTimerSeconds, 10);
+          if (isNaN(timerVal)) {
+            settings.votingTimerSeconds = 10;
+          } else if (timerVal !== 0) {
+            settings.votingTimerSeconds = Math.max(5, Math.min(30, timerVal));
+          } else {
+            settings.votingTimerSeconds = 0;
+          }
+        }
+
         room.settings = { ...room.settings, ...settings };
         io.to(room.code).emit('room:settingsUpdated', { settings: room.settings });
       } catch (err) {

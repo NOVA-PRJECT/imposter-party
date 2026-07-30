@@ -55,7 +55,7 @@ function createRoom(hostSocketId, playerName, requestedMaxPlayers = 10) {
     settings: {
       maxPlayers,
       imposterCount: 1,
-      votingTimerSeconds: 5, // Default 5 seconds
+      votingTimerSeconds: 10, // Default 10 seconds
       wordCategory: 'general',
       selectedCategories: [], // Empty array means ALL categories ticked by default
       hintMode: false,

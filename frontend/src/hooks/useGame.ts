@@ -11,7 +11,7 @@ const initialState: GameState = {
   settings: {
     maxPlayers: 10,
     imposterCount: 1,
-    votingTimerSeconds: 5,
+    votingTimerSeconds: 10,
     wordCategory: 'general',
     hintMode: false,
     meaningMode: false,
