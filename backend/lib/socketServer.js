@@ -11,6 +11,7 @@ const {
   nextRound,
   submitVote,
   tallyVotes,
+  checkWinCondition,
   submitWordGuess,
 } = require('../serverModules/gameManager');
 const { getCategories } = require('../serverModules/utils/wordLoader');
