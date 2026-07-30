@@ -455,6 +455,28 @@ function removePlayerAndMigrateHost(room, socketId, io) {
   }
 
   io.to(room.code).emit('room:updated', { players: safePlayerList(room) });
+
+  if (room.phase !== 'lobby' && room.phase !== 'game-over') {
+    const winCondition = checkWinCondition(room);
+    if (winCondition) {
+      room.phase = 'game-over';
+      const payload = {
+        eliminated: null,
+        tie: false,
+        players: safePlayerList(room),
+        winCondition,
+        revealedPlayers: room.players.map(p => ({
+          id: p.id,
+          name: p.name,
+          color: p.color,
+          isImposter: p.isImposter,
+          isAlive: p.isAlive,
+        })),
+        word: room.currentWord,
+      };
+      io.to(room.code).emit('game:voteResult', payload);
+    }
+  }
 }
 
 module.exports = { initSocketServer };
