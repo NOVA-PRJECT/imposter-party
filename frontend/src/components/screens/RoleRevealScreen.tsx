@@ -104,7 +104,7 @@ export default function RoleRevealScreen({ gameState }: RoleRevealScreenProps) {
       {/* Host Controls / Footer */}
       <div className="w-full max-w-md pt-6 border-t border-border text-center">
         {isHost ? (
-          <Button onClick={actions.discussionReady} variant="accent" fullWidth>
+          <Button onClick={() => actions.discussionReady?.()} variant="accent" fullWidth>
             Everyone's Ready — Start Discussion
           </Button>
         ) : (

@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { generateRoomCode } = require('./utils/codeGenerator');
 const { getNextAvailableColor, isColorAvailable } = require('./utils/colorManager');
 
@@ -27,11 +28,17 @@ function safePlayerList(room) {
   }));
 }
 
+function generateReconnectToken() {
+  return crypto.randomBytes(16).toString('hex');
+}
+
 function createRoom(hostSocketId, playerName, requestedMaxPlayers = 10) {
   const existingCodes = new Set(rooms.keys());
   const code = generateRoomCode(existingCodes);
 
   const maxPlayers = Math.max(3, Math.min(20, parseInt(requestedMaxPlayers, 10) || 10));
+
+  const reconnectToken = generateReconnectToken();
 
   const initialPlayer = {
     id: hostSocketId,
@@ -45,6 +52,7 @@ function createRoom(hostSocketId, playerName, requestedMaxPlayers = 10) {
     voteCount: 0,
     disconnected: false,
     disconnectTimer: null,
+    reconnectToken,
   };
 
   const room = {
@@ -71,16 +79,31 @@ function createRoom(hostSocketId, playerName, requestedMaxPlayers = 10) {
   };
 
   rooms.set(code, room);
-  return { code, player: safePlayerList(room)[0], room };
+  return { code, player: safePlayerList(room)[0], room, reconnectToken };
 }
 
-function joinRoom(code, socketId, playerName) {
+function joinRoom(code, socketId, playerName, reconnectToken = null) {
   const room = rooms.get(code.toUpperCase());
   if (!room) {
     throw new Error('Room not found');
   }
 
   room.lastActive = Date.now();
+  const cleanName = playerName.trim() || 'Player';
+
+  // SECURE RECONNECTION via secret token
+  if (reconnectToken) {
+    const existingPlayer = room.players.find(p => p.reconnectToken === reconnectToken);
+    if (existingPlayer) {
+      if (existingPlayer.disconnectTimer) {
+        clearTimeout(existingPlayer.disconnectTimer);
+        existingPlayer.disconnectTimer = null;
+      }
+      existingPlayer.disconnected = false;
+      existingPlayer.id = socketId;
+      return { room, newPlayer: existingPlayer, isRejoining: true };
+    }
+  }
 
   if (room.phase !== 'lobby') {
     throw new Error('Game already in progress');
@@ -90,12 +113,20 @@ function joinRoom(code, socketId, playerName) {
     throw new Error(`Room is full (Max ${room.settings.maxPlayers} players)`);
   }
 
+  const duplicateName = room.players.some(
+    p => !p.disconnected && p.name.toLowerCase() === cleanName.toLowerCase()
+  );
+  if (duplicateName) {
+    throw new Error(`Name "${cleanName}" is already taken in this room`);
+  }
+
   const usedColors = room.players.map(p => p.color);
   const color = getNextAvailableColor(usedColors);
+  const newReconnectToken = generateReconnectToken();
 
   const newPlayer = {
     id: socketId,
-    name: playerName.trim() || `Player ${room.players.length + 1}`,
+    name: cleanName || `Player ${room.players.length + 1}`,
     color,
     isHost: false,
     isAlive: true,
@@ -105,10 +136,11 @@ function joinRoom(code, socketId, playerName) {
     voteCount: 0,
     disconnected: false,
     disconnectTimer: null,
+    reconnectToken: newReconnectToken,
   };
 
   room.players.push(newPlayer);
-  return { room, newPlayer };
+  return { room, newPlayer, isRejoining: false };
 }
 
 function changePlayerColor(socketId, colorId) {

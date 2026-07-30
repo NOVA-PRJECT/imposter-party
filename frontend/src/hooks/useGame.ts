@@ -47,7 +47,15 @@ export function useGame(initialRoomCode: string = '') {
       setState(s => ({ ...s, myId: socket.id ?? '' }));
     });
 
-    socket.on('room:created', ({ code, player, room }) => {
+    socket.on('room:created', ({ code, player, room, reconnectToken }) => {
+      if (reconnectToken) {
+        try {
+          sessionStorage.setItem(
+            'imposter_party_session',
+            JSON.stringify({ code, reconnectToken, playerName: player.name })
+          );
+        } catch (e) {}
+      }
       setState(s => ({
         ...s,
         roomCode: code,
@@ -62,7 +70,16 @@ export function useGame(initialRoomCode: string = '') {
       }));
     });
 
-    socket.on('room:joined', ({ room }) => {
+    socket.on('room:joined', ({ room, reconnectToken }) => {
+      if (reconnectToken) {
+        try {
+          const myPlayer = room.players.find((p: Player) => p.id === socket.id);
+          sessionStorage.setItem(
+            'imposter_party_session',
+            JSON.stringify({ code: room.code, reconnectToken, playerName: myPlayer?.name || '' })
+          );
+        } catch (e) {}
+      }
       setState(s => ({
         ...s,
         roomCode: room.code,
@@ -201,7 +218,18 @@ export function useGame(initialRoomCode: string = '') {
     },
     joinRoom: (code: string, playerName: string) => {
       if (!socket.connected) socket.connect();
-      socket.emit('room:join', { code, playerName });
+      let reconnectToken: string | undefined;
+      try {
+        const rawSession = sessionStorage.getItem('imposter_party_session');
+        if (rawSession) {
+          const parsed = JSON.parse(rawSession);
+          if (parsed.code === code.toUpperCase() && parsed.reconnectToken) {
+            reconnectToken = parsed.reconnectToken;
+          }
+        }
+      } catch (e) {}
+
+      socket.emit('room:join', { code, playerName, reconnectToken });
     },
     startGame: () => socket.emit('game:start'),
     callVote: () => socket.emit('game:callVote'),
@@ -221,6 +249,9 @@ export function useGame(initialRoomCode: string = '') {
     changeColor: (colorId: string) =>
       socket.emit('player:colorChange', { colorId }),
     leaveRoom: () => {
+      try {
+        sessionStorage.removeItem('imposter_party_session');
+      } catch (e) {}
       socket.emit('room:leave');
       setState(s => ({ ...initialState }));
     },

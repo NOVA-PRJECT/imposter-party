@@ -46,7 +46,7 @@ function initSocketServer(io) {
     socket.on('room:create', ({ playerName, maxPlayers }) => {
       try {
         const cleanName = sanitizeString(playerName, 16) || 'Player 1';
-        const { code, player, room } = createRoom(socket.id, cleanName, maxPlayers);
+        const { code, player, room, reconnectToken } = createRoom(socket.id, cleanName, maxPlayers);
         socket.join(code);
 
         const safeRoomView = {
@@ -57,31 +57,20 @@ function initSocketServer(io) {
           customWords: room.customWords || [],
         };
 
-        socket.emit('room:created', { code, player, room: safeRoomView });
+        socket.emit('room:created', { code, player, room: safeRoomView, reconnectToken });
       } catch (err) {
         socket.emit('error', { message: err.message });
       }
     });
 
     // room:join
-    socket.on('room:join', ({ code, playerName }) => {
+    socket.on('room:join', ({ code, playerName, reconnectToken }) => {
       try {
         const cleanCode = sanitizeString(code, 6).toUpperCase();
         const cleanName = sanitizeString(playerName, 16) || 'Player';
 
-        const { room, newPlayer } = joinRoom(cleanCode, socket.id, cleanName);
+        const { room, newPlayer, isRejoining } = joinRoom(cleanCode, socket.id, cleanName, reconnectToken);
         socket.join(room.code);
-
-        // Reconnection: if a player with same name was disconnected, restore them
-const rejoining = room.players.find(p => p.name === cleanName && p.disconnected);
-if (rejoining) {
-  if (rejoining.disconnectTimer) {
-    clearTimeout(rejoining.disconnectTimer);
-    rejoining.disconnectTimer = null;
-  }
-  rejoining.disconnected = false;
-  rejoining.id = socket.id;
-}
 
         const safeRoomView = {
           code: room.code,
@@ -91,8 +80,45 @@ if (rejoining) {
           customWords: room.customWords || [],
         };
 
-        socket.emit('room:joined', { room: safeRoomView, myColor: newPlayer.color });
+        socket.emit('room:joined', {
+          room: safeRoomView,
+          myColor: newPlayer.color,
+          reconnectToken: newPlayer.reconnectToken,
+        });
         io.to(room.code).emit('room:updated', { players: safePlayerList(room) });
+
+        if (isRejoining && room.phase !== 'lobby') {
+          const player = room.players.find(p => p.id === socket.id);
+          if (player) {
+            const imposters = room.players.filter(p => p.isImposter);
+            if (player.isImposter) {
+              const fellowImposters = imposters
+                .filter(imp => imp.id !== player.id)
+                .map(imp => ({ name: imp.name, color: imp.color }));
+
+              socket.emit('game:roleAssigned', {
+                isImposter: true,
+                word: null,
+                meaning: null,
+                hint: room.settings.hintMode ? room.currentHint : null,
+                fellowImposters,
+              });
+            } else {
+              socket.emit('game:roleAssigned', {
+                isImposter: false,
+                word: room.currentWord,
+                meaning: room.settings.meaningMode ? room.currentMeaning : null,
+                hint: null,
+                fellowImposters: [],
+              });
+            }
+          }
+          socket.emit('game:phaseChanged', {
+            phase: room.phase,
+            round: room.round,
+            players: safePlayerList(room),
+          });
+        }
       } catch (err) {
         socket.emit('error', { message: err.message });
       }

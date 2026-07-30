@@ -41,13 +41,20 @@ export default function LobbyScreen({ gameState }: LobbyScreenProps) {
   const me = players.find(p => p.id === myId);
   const myColor = me?.color || 'red';
   const onlinePlayers = players.filter(p => !p.disconnected);
-  const maxImpostersAllowed = Math.max(1, Math.ceil(players.length / 5));
-  const canStart = onlinePlayers.length >= 3 && settings.imposterCount <= maxImpostersAllowed;
-  const occupiedColors = players.map(p => p.color);
-
+  const maxImpostersAllowed = Math.max(1, Math.ceil(onlinePlayers.length / 5));
 
   // Selected categories list
   const selectedCatIds = settings.selectedCategories || [];
+  const isCustomOnly = selectedCatIds.includes('custom_only') && selectedCatIds.length === 1;
+  const isCustomOnlyEmpty = isCustomOnly && customWords.length === 0;
+
+  const canStart =
+    onlinePlayers.length >= 3 &&
+    settings.imposterCount <= maxImpostersAllowed &&
+    !isCustomOnlyEmpty;
+  const occupiedColors = players.map(p => p.color);
+
+
   const allCategoryIds = categories.map(c => c.id);
   const isAllSelected = selectedCatIds.length === 0 || selectedCatIds.length >= allCategoryIds.length;
 
@@ -476,7 +483,11 @@ export default function LobbyScreen({ gameState }: LobbyScreenProps) {
             disabled={!canStart}
             className="mt-4"
           >
-            {onlinePlayers.length < 3 ? 'Need at least 3 players' : 'START GAME'}
+            {onlinePlayers.length < 3
+              ? 'Need at least 3 players'
+              : isCustomOnlyEmpty
+              ? 'Add custom words to start'
+              : 'START GAME'}
           </Button>
         </div>
       ) : (

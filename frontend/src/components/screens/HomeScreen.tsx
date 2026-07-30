@@ -36,7 +36,7 @@ export default function HomeScreen({ gameState }: HomeScreenProps) {
       {/* Top Title Header */}
       <div className="text-center mb-6 w-full">
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-accent accent-glow mb-2">
-          IMPOSTER PARTY
+          IMPOSTER GROUP
         </h1>
         <p className="text-muted text-sm sm:text-base font-medium">
           Same room. Own phone. Find the imposter.
@@ -203,7 +203,7 @@ export default function HomeScreen({ gameState }: HomeScreenProps) {
 
       {/* Footer Branding */}
       <div className="text-center mt-6 text-xs font-mono text-muted">
-        Imposter Party v1.0 • Crafted for Local Party Fun
+        Imposter Group v1.0 • Crafted for Local Group Fun
       </div>
 
       {/* ABOUT GAME MODAL */}

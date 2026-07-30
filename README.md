@@ -1,8 +1,8 @@
-# 🕵️‍♂️ Imposter Party
+# 🕵️‍♂️ Imposter Group
 
 > **Same room. Own phone. Find the imposter!**
 
-**Imposter Party** is an exciting, fast-paced local multiplayer word game designed for friends and families hanging out in the same room. No app downloads, no sign-ups, and no hassle — simply open the website on any smartphone browser, enter a room code, and start playing instantly!
+**Imposter Group** is an exciting, fast-paced local multiplayer word game designed for friends and families hanging out in the same room. No app downloads, no sign-ups, and no hassle — simply open the website on any smartphone browser, enter a room code, and start playing instantly!
 
 ---
 

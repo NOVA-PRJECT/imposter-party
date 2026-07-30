@@ -38,5 +38,5 @@ const io = new Server(httpServer, {
 initSocketServer(io);
 
 httpServer.listen(port, () => {
-  console.log(`> Imposter Party Backend ready on port ${port}`);
+  console.log(`> Imposter Group Backend ready on port ${port}`);
 });

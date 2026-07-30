@@ -43,9 +43,13 @@ function getRandomWord(categoryParam = 'general', customWords = [], roomState = 
 
   // Handle custom words only mode
   if (categoryParam === 'custom_only' || (Array.isArray(categoryParam) && categoryParam.includes('custom_only') && targetCategoryIds.length === 0)) {
-    const pool = customWords.map(w => ({ ...w, categoryId: 'custom_only' }));
-    const filtered = pool.filter(w => w.word !== lastWord);
-    return (filtered.length > 0 ? filtered : pool)[Math.floor(Math.random() * pool.length)];
+    if (customWords && customWords.length > 0) {
+      const pool = customWords.map(w => ({ ...w, categoryId: 'custom_only' }));
+      const filtered = pool.filter(w => w.word !== lastWord);
+      return (filtered.length > 0 ? filtered : pool)[Math.floor(Math.random() * pool.length)];
+    }
+    // Fallback to all categories if no custom words exist
+    targetCategoryIds = data.categories.map(c => c.id);
   }
 
   // Find candidate category objects from dataset matching host's ticked categories
