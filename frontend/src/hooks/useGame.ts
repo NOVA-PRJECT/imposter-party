@@ -182,6 +182,10 @@ export function useGame(initialRoomCode: string = '') {
       }));
     });
 
+    socket.on('game:guessResult', (res: { success: boolean; message: string }) => {
+      setState(s => ({ ...s, guessResult: res }));
+    });
+
     socket.on('error', ({ message }: { message: string }) => {
       setState(s => ({ ...s, error: message }));
     });
@@ -256,6 +260,8 @@ export function useGame(initialRoomCode: string = '') {
       setState(s => ({ ...initialState }));
     },
     playAgain: () => socket.emit('game:playAgain'),
+    guessWord: (guess: string) => socket.emit('game:guessWord', { guess }),
+    clearGuessResult: () => setState(s => ({ ...s, guessResult: null })),
     clearError: () => setState(s => ({ ...s, error: null })),
   };
 

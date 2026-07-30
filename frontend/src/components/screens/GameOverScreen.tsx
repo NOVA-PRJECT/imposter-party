@@ -16,6 +16,7 @@ export default function GameOverScreen({ gameState }: GameOverScreenProps) {
   const winCondition = voteResult?.winCondition;
   const revealedPlayers = voteResult?.revealedPlayers || [];
   const word = voteResult?.word;
+  const guessedBy = voteResult?.guessedBy;
 
   const isCrewmateWin = winCondition === 'crewmates';
 
@@ -42,13 +43,32 @@ export default function GameOverScreen({ gameState }: GameOverScreenProps) {
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-danger accent-glow">
                 IMPOSTERS WIN
               </h1>
-              <p className="text-xs text-muted">The imposters took over the group!</p>
+              <p className="text-xs text-muted">
+                {guessedBy
+                  ? `🎯 ${guessedBy.name} correctly guessed the secret word!`
+                  : 'The imposters took over the group!'}
+              </p>
             </div>
           )}
         </div>
 
+        {/* Word Guess Hero Banner if won by guess */}
+        {guessedBy && (
+          <div className="p-4 rounded-card bg-danger/15 border-2 border-danger text-center space-y-1 animate-bounce shadow-xl">
+            <span className="text-xs font-mono uppercase text-danger font-black tracking-wider block">
+              🎯 CLUTCH WORD GUESS VICTORY!
+            </span>
+            <p className="text-sm font-bold text-primary">
+              <strong className="text-danger">{guessedBy.name}</strong> correctly guessed:
+            </p>
+            <span className="text-2xl font-black text-white font-mono block">
+              "{guessedBy.word}"
+            </span>
+          </div>
+        )}
+
         {/* Revealed Secret Word */}
-        {word && (
+        {word && !guessedBy && (
           <div className="p-4 rounded-card bg-surface border border-border">
             <span className="text-xs font-mono uppercase text-muted block mb-1">
               The Secret Word Was

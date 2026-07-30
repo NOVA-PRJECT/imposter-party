@@ -11,11 +11,15 @@ interface DiscussionScreenProps {
 }
 
 export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
-  const { players, myRole, isHost, actions } = gameState;
+  const { players, myId, myRole, isHost, guessResult, actions } = gameState;
   const [showConfirm, setShowConfirm] = useState(false);
   const [isWordVisible, setIsWordVisible] = useState(true);
+  const [showGuessModal, setShowGuessModal] = useState(false);
+  const [guessInput, setGuessInput] = useState('');
 
+  const me = players.find(p => p.id === myId);
   const isImposter = myRole?.isImposter ?? false;
+  const canGuess = isImposter && (me?.isAlive ?? false);
 
   useEffect(() => {
     playNewRound();
@@ -26,6 +30,14 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
     setShowConfirm(false);
     playEmergencyMeeting();
     actions.callVote();
+  };
+
+  const handleGuessSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (guessInput.trim()) {
+      actions.clearGuessResult?.();
+      actions.guessWord(guessInput.trim());
+    }
   };
 
   return (
@@ -96,7 +108,22 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
                       </div>
                     </div>
                   )}
-                  {!myRole?.hint && (
+                  {canGuess && (
+                    <div className="mt-4 pt-3 border-t border-danger/30">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          actions.clearGuessResult?.();
+                          setShowGuessModal(true);
+                        }}
+                        className="w-full py-2.5 px-4 bg-danger hover:bg-red-700 text-white font-bold text-xs sm:text-sm rounded-card border border-danger/40 shadow-lg shadow-danger/20 active:scale-95 transition-transform flex items-center justify-center gap-2 uppercase tracking-wider"
+                      >
+                        <span>🎯</span>
+                        <span>Guess Secret Word (Instant Win!)</span>
+                      </button>
+                    </div>
+                  )}
+                  {!myRole?.hint && !canGuess && (
                     <p className="text-xs italic text-muted mt-2">No hint enabled. Fake confidence!</p>
                   )}
                 </div>
@@ -206,6 +233,72 @@ export default function DiscussionScreen({ gameState }: DiscussionScreenProps) {
           </div>
         )}
       </div>
+
+      {/* GUESS SECRET WORD MODAL */}
+      {showGuessModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-surface border-2 border-danger rounded-2xl p-6 max-w-md w-[92vw] space-y-4 shadow-2xl relative">
+            <button
+              onClick={() => {
+                setShowGuessModal(false);
+                actions.clearGuessResult?.();
+              }}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold text-xl p-1"
+            >
+              ✕
+            </button>
+
+            <div className="text-center border-b border-border pb-3">
+              <span className="text-4xl">🎯</span>
+              <h2 className="text-2xl font-extrabold text-danger uppercase tracking-wider">
+                Guess Secret Word
+              </h2>
+              <p className="text-xs text-muted mt-1">
+                If you guess the exact secret word, <strong>IMPOSTERS INSTANTLY WIN!</strong>
+              </p>
+            </div>
+
+            {guessResult && !guessResult.success && (
+              <div className="p-3 rounded-card bg-danger/10 border border-danger text-danger text-xs text-center font-bold animate-shake">
+                {guessResult.message}
+              </div>
+            )}
+
+            <form onSubmit={handleGuessSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono uppercase text-muted mb-1">
+                  Exact Secret Word (Case Insensitive)
+                </label>
+                <input
+                  type="text"
+                  value={guessInput}
+                  onChange={e => setGuessInput(e.target.value)}
+                  placeholder="Type word here..."
+                  autoFocus
+                  required
+                  className="w-full px-4 py-3 bg-surface2 border border-border rounded-card text-primary placeholder-muted focus:outline-none focus:border-danger font-bold text-lg text-center"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setShowGuessModal(false);
+                    actions.clearGuessResult?.();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" variant="danger">
+                  Submit Guess 🚀
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

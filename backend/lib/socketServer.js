@@ -11,6 +11,7 @@ const {
   nextRound,
   submitVote,
   tallyVotes,
+  submitWordGuess,
 } = require('../serverModules/gameManager');
 const { getCategories } = require('../serverModules/utils/wordLoader');
 const { getMaxImposters } = require('../serverModules/utils/imposterRules');
@@ -381,6 +382,17 @@ function initSocketServer(io) {
           phase: 'lobby',
           players: safePlayerList(room),
         });
+      } catch (err) {
+        socket.emit('error', { message: err.message });
+      }
+    });
+
+    // game:guessWord
+    socket.on('game:guessWord', ({ guess }) => {
+      try {
+        const room = findRoomBySocketId(socket.id);
+        if (!room) return;
+        submitWordGuess(room, socket.id, guess, io);
       } catch (err) {
         socket.emit('error', { message: err.message });
       }

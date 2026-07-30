@@ -232,10 +232,70 @@ function checkWinCondition(room) {
   return null;
 }
 
+function submitWordGuess(room, socketId, guess, io) {
+  if (!room || (room.phase !== 'discussion' && room.phase !== 'voting')) {
+    throw new Error('Can only guess word during active discussion or voting phase');
+  }
+
+  const player = room.players.find(p => p.id === socketId);
+  if (!player || !player.isImposter) {
+    throw new Error('Only Imposters can guess the secret word');
+  }
+
+  if (!player.isAlive) {
+    throw new Error('Dead imposters cannot guess the word');
+  }
+
+  const cleanGuess = (guess || '').trim().toLowerCase();
+  const targetWord = (room.currentWord || '').trim().toLowerCase();
+
+  const isCorrect = cleanGuess === targetWord;
+
+  if (isCorrect) {
+    room.phase = 'game-over';
+    if (room.votingTimerRef) {
+      clearTimeout(room.votingTimerRef);
+      room.votingTimerRef = null;
+    }
+
+    const payload = {
+      eliminated: null,
+      tie: false,
+      players: safePlayerList(room),
+      winCondition: 'imposters',
+      guessedBy: {
+        id: player.id,
+        name: player.name,
+        color: player.color,
+        word: room.currentWord,
+      },
+      revealedPlayers: room.players.map(p => ({
+        id: p.id,
+        name: p.name,
+        color: p.color,
+        isImposter: p.isImposter,
+        isAlive: p.isAlive,
+      })),
+      word: room.currentWord,
+    };
+
+    io.to(room.code).emit('game:voteResult', payload);
+  } else {
+    const socket = io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.emit('game:guessResult', {
+        success: false,
+        message: `"${guess}" is NOT the secret word! Check spelling OR Guess another word.`,
+      });
+    }
+  }
+}
+
 module.exports = {
   startGame,
   nextRound,
   submitVote,
   tallyVotes,
   checkWinCondition,
+  submitWordGuess,
 };

@@ -93,6 +93,12 @@ export interface VoteResult {
   winCondition: 'crewmates' | 'imposters' | null;
   revealedPlayers?: RevealedPlayer[];
   word?: string;
+  guessedBy?: {
+    id: string;
+    name: string;
+    color: ColorId;
+    word: string;
+  } | null;
 }
 
 export interface RevealedPlayer extends Player {
@@ -116,4 +122,5 @@ export interface GameState {
   customWordCount: number;
   customWords: CustomWord[];
   error: string | null;
+  guessResult?: { success: boolean; message: string } | null;
 }
